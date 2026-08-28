@@ -18,6 +18,7 @@ import { useEffect } from "react";
 import { seedDatabase } from "./services/articleService";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import AdminDashboard from "./pages/AdminDashboard";
+import AdminLoginPage from "./pages/AdminLoginPage";
 import CategoryPage from "./pages/CategoryPage";
 import EventsPage from "./pages/EventsPage";
 import TrendingPage from "./pages/TrendingPage";
@@ -37,6 +38,8 @@ function AppContent() {
     <div className="min-h-screen bg-slate-50 flex flex-col">
       <Routes>
         <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/admin/login" element={<AdminLoginPage />} />
+        <Route path="/login" element={<AdminLoginPage />} />
         <Route path="/trending" element={<TrendingPage />} />
         <Route path="/category/:category" element={<CategoryPage />} />
         <Route path="/events" element={<EventsPage />} />

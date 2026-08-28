@@ -1,74 +1,82 @@
-import { collection, query, getDocs, orderBy, Timestamp, addDoc, doc, deleteDoc, getDoc, updateDoc } from 'firebase/firestore';
-import { db, OperationType, handleFirestoreError } from '../lib/firebase';
 import { NewsEvent } from '../types';
 
-const EVENTS_COLLECTION = 'events';
-
-export const getEventById = async (id: string) => {
+export const getEventById = async (id: string): Promise<NewsEvent | null> => {
   try {
-    const docRef = doc(db, EVENTS_COLLECTION, id);
-    const docSnap = await getDoc(docRef);
-    
-    if (docSnap.exists()) {
-      return {
-        ...docSnap.data(),
-        id: docSnap.id
-      } as NewsEvent;
+    const res = await fetch(`/api/events/${id}`);
+    if (!res.ok) {
+      if (res.status === 404) return null;
+      throw new Error(`Failed to fetch event: ${res.statusText}`);
     }
-    return null;
+    const data = await res.json();
+    return data as NewsEvent;
   } catch (error) {
     console.error("Error fetching event:", error);
     return null;
   }
 };
 
-export const getEvents = async () => {
+export const getEvents = async (): Promise<NewsEvent[]> => {
   try {
-    const q = query(
-      collection(db, EVENTS_COLLECTION),
-      orderBy('date', 'asc')
-    );
-
-    const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => ({
-      ...doc.data(),
-      id: doc.id
-    })) as NewsEvent[];
+    const res = await fetch('/api/events');
+    if (!res.ok) {
+      throw new Error(`Failed to fetch events: ${res.statusText}`);
+    }
+    const data = await res.json();
+    return data as NewsEvent[];
   } catch (error) {
     console.error("Error fetching events:", error);
     return [];
   }
 };
 
-export const createEvent = async (eventData: Omit<NewsEvent, 'id' | 'createdAt'>) => {
+export const createEvent = async (eventData: Omit<NewsEvent, 'id' | 'createdAt'>): Promise<string | undefined> => {
   try {
-    const docRef = await addDoc(collection(db, EVENTS_COLLECTION), {
-      ...eventData,
-      createdAt: Timestamp.now(),
+    const res = await fetch('/api/events', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(eventData),
     });
-    return docRef.id;
+    if (!res.ok) {
+      throw new Error(`Failed to create event: ${res.statusText}`);
+    }
+    const data = await res.json();
+    return data.id;
   } catch (error) {
-    handleFirestoreError(error, OperationType.CREATE, EVENTS_COLLECTION);
+    console.error("Error creating event:", error);
+    throw error;
   }
 };
 
-export const updateEvent = async (eventId: string, eventData: Partial<NewsEvent>) => {
+export const updateEvent = async (eventId: string, eventData: Partial<NewsEvent>): Promise<boolean> => {
   try {
-    const docRef = doc(db, EVENTS_COLLECTION, eventId);
-    await updateDoc(docRef, eventData);
-    return true;
+    const res = await fetch(`/api/events/${eventId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(eventData),
+    });
+    return res.ok;
   } catch (error) {
-    handleFirestoreError(error, OperationType.UPDATE, EVENTS_COLLECTION);
+    console.error("Error updating event:", error);
     return false;
   }
 };
 
-export const deleteEvent = async (eventId: string) => {
+export const deleteEvent = async (eventId: string): Promise<boolean> => {
   try {
-    await deleteDoc(doc(db, EVENTS_COLLECTION, eventId));
-    return true;
+    if (!eventId) {
+      throw new Error("Event ID is required to delete.");
+    }
+    const res = await fetch(`/api/events/${eventId}`, {
+      method: 'DELETE',
+    });
+    return res.ok;
   } catch (error) {
-    handleFirestoreError(error, OperationType.DELETE, EVENTS_COLLECTION);
+    console.error("Error deleting event:", error);
     return false;
   }
 };
+

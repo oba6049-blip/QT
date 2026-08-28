@@ -1,74 +1,82 @@
-import { collection, query, getDocs, orderBy, Timestamp, addDoc, doc, deleteDoc, getDoc, updateDoc } from 'firebase/firestore';
-import { db, OperationType, handleFirestoreError } from '../lib/firebase';
 import { SpotlightStory } from '../types';
 
-const SPOTLIGHT_COLLECTION = 'spotlight';
-
-export const getSpotlightStoryById = async (id: string) => {
+export const getSpotlightStoryById = async (id: string): Promise<SpotlightStory | null> => {
   try {
-    const docRef = doc(db, SPOTLIGHT_COLLECTION, id);
-    const docSnap = await getDoc(docRef);
-    
-    if (docSnap.exists()) {
-      return {
-        ...docSnap.data(),
-        id: docSnap.id
-      } as SpotlightStory;
+    const res = await fetch(`/api/spotlight/${id}`);
+    if (!res.ok) {
+      if (res.status === 404) return null;
+      throw new Error(`Failed to fetch spotlight story: ${res.statusText}`);
     }
-    return null;
+    const data = await res.json();
+    return data as SpotlightStory;
   } catch (error) {
     console.error("Error fetching spotlight story:", error);
     return null;
   }
 };
 
-export const getSpotlightStories = async () => {
+export const getSpotlightStories = async (): Promise<SpotlightStory[]> => {
   try {
-    const q = query(
-      collection(db, SPOTLIGHT_COLLECTION),
-      orderBy('createdAt', 'desc')
-    );
-
-    const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => ({
-      ...doc.data(),
-      id: doc.id
-    })) as SpotlightStory[];
+    const res = await fetch('/api/spotlight');
+    if (!res.ok) {
+      throw new Error(`Failed to fetch spotlight stories: ${res.statusText}`);
+    }
+    const data = await res.json();
+    return data as SpotlightStory[];
   } catch (error) {
     console.error("Error fetching spotlight stories:", error);
     return [];
   }
 };
 
-export const createSpotlightStory = async (storyData: Omit<SpotlightStory, 'id' | 'createdAt'>) => {
+export const createSpotlightStory = async (storyData: Omit<SpotlightStory, 'id' | 'createdAt'>): Promise<string | undefined> => {
   try {
-    const docRef = await addDoc(collection(db, SPOTLIGHT_COLLECTION), {
-      ...storyData,
-      createdAt: Timestamp.now(),
+    const res = await fetch('/api/spotlight', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(storyData),
     });
-    return docRef.id;
+    if (!res.ok) {
+      throw new Error(`Failed to create spotlight story: ${res.statusText}`);
+    }
+    const data = await res.json();
+    return data.id;
   } catch (error) {
-    handleFirestoreError(error, OperationType.CREATE, SPOTLIGHT_COLLECTION);
+    console.error("Error creating spotlight story:", error);
+    throw error;
   }
 };
 
-export const updateSpotlightStory = async (storyId: string, storyData: Partial<SpotlightStory>) => {
+export const updateSpotlightStory = async (storyId: string, storyData: Partial<SpotlightStory>): Promise<boolean> => {
   try {
-    const docRef = doc(db, SPOTLIGHT_COLLECTION, storyId);
-    await updateDoc(docRef, storyData);
-    return true;
+    const res = await fetch(`/api/spotlight/${storyId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(storyData),
+    });
+    return res.ok;
   } catch (error) {
-    handleFirestoreError(error, OperationType.UPDATE, SPOTLIGHT_COLLECTION);
+    console.error("Error updating spotlight story:", error);
     return false;
   }
 };
 
-export const deleteSpotlightStory = async (storyId: string) => {
+export const deleteSpotlightStory = async (storyId: string): Promise<boolean> => {
   try {
-    await deleteDoc(doc(db, SPOTLIGHT_COLLECTION, storyId));
-    return true;
+    if (!storyId) {
+      throw new Error("Spotlight story ID is required to delete.");
+    }
+    const res = await fetch(`/api/spotlight/${storyId}`, {
+      method: 'DELETE',
+    });
+    return res.ok;
   } catch (error) {
-    handleFirestoreError(error, OperationType.DELETE, SPOTLIGHT_COLLECTION);
+    console.error("Error deleting spotlight story:", error);
     return false;
   }
 };
+

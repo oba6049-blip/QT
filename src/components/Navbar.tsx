@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from "motion/react";
-import { Search, Menu, User, Bell, LogOut, Settings } from "lucide-react";
+import { Search, Menu, User, Bell, LogOut, Settings, Lock } from "lucide-react";
 import { useAuth } from "../lib/AuthContext";
-import { signInWithGoogle, logout } from "../lib/firebase";
+import { logout, ADMIN_EMAIL } from "../lib/auth";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -10,9 +10,6 @@ export default function Navbar() {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const navigate = useNavigate();
-
-  const ADMIN_EMAIL = "subairnurudeen20@gmail.com";
-  const isAdmin = user?.email === ADMIN_EMAIL;
 
   const navItems = [
     { name: "Trending", path: "/trending" },
@@ -59,8 +56,16 @@ export default function Navbar() {
                 onClick={() => setShowUserMenu(!showUserMenu)}
                 className="flex items-center gap-3 p-1 pr-3 hover:bg-slate-50 rounded-full transition-colors border border-transparent hover:border-slate-100"
               >
-                <img src={user.photoURL || ""} alt={user.displayName || ""} className="w-8 h-8 rounded-full border border-slate-200" />
-                <span className="text-xs font-bold uppercase tracking-widest hidden md:block">{user.displayName?.split(' ')[0]}</span>
+                {user.photoURL ? (
+                  <img src={user.photoURL} alt={user.displayName || "Admin"} className="w-8 h-8 rounded-full border border-slate-200 object-cover" />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs font-bold font-mono uppercase">
+                    {(user.displayName || user.email || "A").charAt(0)}
+                  </div>
+                )}
+                <span className="text-xs font-bold uppercase tracking-widest hidden md:block">
+                  {user.displayName?.split(' ')[0] || "Admin"}
+                </span>
               </button>
 
               <AnimatePresence>
@@ -69,18 +74,16 @@ export default function Navbar() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 10 }}
-                    className="absolute right-0 mt-2 w-48 bg-white border border-slate-200 shadow-xl py-2 z-50"
+                    className="absolute right-0 mt-2 w-48 bg-white border border-slate-200 shadow-xl py-2 z-50 rounded-sm"
                   >
-                    {isAdmin && (
-                      <Link 
-                        to="/admin"
-                        onClick={() => setShowUserMenu(false)}
-                        className="w-full flex items-center gap-2 px-4 py-3 text-xs font-bold text-brand-accent hover:bg-slate-50 transition-colors uppercase tracking-widest border-b border-slate-100"
-                      >
-                        <Settings size={16} />
-                        Admin Panel
-                      </Link>
-                    )}
+                    <Link 
+                      to="/admin"
+                      onClick={() => setShowUserMenu(false)}
+                      className="w-full flex items-center gap-2 px-4 py-3 text-xs font-bold text-brand-accent hover:bg-slate-50 transition-colors uppercase tracking-widest border-b border-slate-100"
+                    >
+                      <Settings size={16} />
+                      Editorial Panel
+                    </Link>
                     <button 
                       onClick={() => {
                         logout();
@@ -96,13 +99,14 @@ export default function Navbar() {
               </AnimatePresence>
             </div>
           ) : (
-            <button 
-              onClick={() => signInWithGoogle()}
+            <Link 
+              to="/admin/login"
               className="bg-black text-white p-2.5 hover:bg-brand-accent transition-colors flex items-center justify-center rounded-sm"
-              aria-label="Sign In"
+              aria-label="Admin Login"
+              title="Admin Login"
             >
-              <User size={18} />
-            </button>
+              <Lock size={16} />
+            </Link>
           )}
 
           <button 
@@ -153,6 +157,37 @@ export default function Navbar() {
                     {item.name}
                   </Link>
                 ))}
+              </div>
+
+              <div className="mt-8 pt-6 border-t border-slate-100">
+                {user ? (
+                  <div className="space-y-3">
+                    <Link
+                      to="/admin"
+                      onClick={() => setShowMobileMenu(false)}
+                      className="block text-xs font-bold uppercase tracking-widest text-brand-accent hover:underline"
+                    >
+                      Admin Dashboard
+                    </Link>
+                    <button
+                      onClick={() => {
+                        logout();
+                        setShowMobileMenu(false);
+                      }}
+                      className="block text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-black"
+                    >
+                      Sign Out
+                    </button>
+                  </div>
+                ) : (
+                  <Link
+                    to="/admin/login"
+                    onClick={() => setShowMobileMenu(false)}
+                    className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-900 hover:text-brand-accent"
+                  >
+                    <Lock size={14} /> Admin Portal Login
+                  </Link>
+                )}
               </div>
 
               <div className="mt-auto pt-12 border-t border-slate-100 italic font-serif text-slate-400 text-sm">

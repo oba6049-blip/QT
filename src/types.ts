@@ -57,3 +57,38 @@ export interface UserProfile {
   photoURL: string;
   role: 'reader' | 'contributor' | 'editor';
 }
+
+export type UserRole = 'superadmin' | 'editor' | 'author' | 'event_manager' | 'custom';
+
+export type DashboardTab = 
+  | 'create' 
+  | 'manage' 
+  | 'create-event' 
+  | 'manage-events' 
+  | 'create-expert' 
+  | 'manage-experts' 
+  | 'create-spotlight' 
+  | 'manage-spotlight' 
+  | 'storage' 
+  | 'team';
+
+export interface DashboardTabOption {
+  id: DashboardTab;
+  label: string;
+  category: 'Editorial' | 'Events' | 'Experts' | 'Spotlights' | 'System';
+  description: string;
+}
+
+export interface DashboardUser {
+  id: string;
+  email: string;
+  displayName: string;
+  role: UserRole;
+  allowedTabs: DashboardTab[];
+  designation?: string;
+  status: 'active' | 'suspended';
+  mustChangePassword?: boolean;
+  createdAt: string;
+  lastLoginAt?: string;
+  createdBy?: string;
+}

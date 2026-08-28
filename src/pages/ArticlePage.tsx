@@ -177,6 +177,11 @@ export default function ArticlePage() {
               src={article.image} 
               alt={article.title} 
               className="w-full h-full object-cover"
+              referrerPolicy="no-referrer"
+              onError={(e) => {
+                // Fallback to high-res editorial placeholder if image fails
+                (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&fit=crop&q=80&w=1200";
+              }}
             />
           </div>
 

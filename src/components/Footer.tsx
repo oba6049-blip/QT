@@ -54,7 +54,7 @@ export default function Footer() {
               <li><Link to="/" className="hover:text-brand-accent transition-colors">Help Center</Link></li>
               <li><Link to="/" className="hover:text-brand-accent transition-colors">Newsletter</Link></li>
               <li><Link to="/events" className="hover:text-brand-accent transition-colors">Events Hub</Link></li>
-              <li><Link to="/" className="hover:text-brand-accent transition-colors">Contributor API</Link></li>
+              <li><Link to="/admin/login" className="hover:text-brand-accent transition-colors">Editorial Login</Link></li>
             </ul>
           </div>
         </div>

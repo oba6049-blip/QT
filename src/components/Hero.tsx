@@ -159,7 +159,15 @@ export default function Hero() {
             </h3>
             
             <div className="space-y-8">
-              {!loading && trending.length > 0 ? (
+              {loading ? (
+                [1, 2, 3].map((i) => (
+                  <div key={i} className="animate-pulse flex flex-col gap-2">
+                    <div className="h-10 w-12 bg-slate-50" />
+                    <div className="h-6 w-full bg-slate-50" />
+                    <div className="h-4 w-32 bg-slate-50" />
+                  </div>
+                ))
+              ) : trending.length > 0 ? (
                 trending.map((item, idx) => (
                   <Link key={item.id} to={`/article/${item.id}`} className="group cursor-pointer block border-none outline-none">
                     <div className="text-slate-200 font-serif text-5xl font-bold mb-1 group-hover:text-brand-accent transition-colors leading-none">
@@ -174,13 +182,10 @@ export default function Hero() {
                   </Link>
                 ))
               ) : (
-                [1, 2, 3].map((i) => (
-                  <div key={i} className="animate-pulse flex flex-col gap-2">
-                    <div className="h-10 w-12 bg-slate-50" />
-                    <div className="h-6 w-full bg-slate-50" />
-                    <div className="h-4 w-32 bg-slate-50" />
-                  </div>
-                ))
+                <div className="p-6 border border-dashed border-slate-200 rounded-lg text-slate-400 text-sm">
+                  <p className="font-medium text-slate-600 mb-1">No trending stories published yet</p>
+                  <p className="text-xs">Publish articles in the Editorial Dashboard to highlight stories here.</p>
+                </div>
               )}
             </div>
 

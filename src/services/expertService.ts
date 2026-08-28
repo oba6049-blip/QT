@@ -1,74 +1,82 @@
-import { collection, query, getDocs, orderBy, Timestamp, addDoc, doc, deleteDoc, getDoc, updateDoc } from 'firebase/firestore';
-import { db, OperationType, handleFirestoreError } from '../lib/firebase';
 import { Expert } from '../types';
 
-const EXPERTS_COLLECTION = 'experts';
-
-export const getExpertById = async (id: string) => {
+export const getExpertById = async (id: string): Promise<Expert | null> => {
   try {
-    const docRef = doc(db, EXPERTS_COLLECTION, id);
-    const docSnap = await getDoc(docRef);
-    
-    if (docSnap.exists()) {
-      return {
-        ...docSnap.data(),
-        id: docSnap.id
-      } as Expert;
+    const res = await fetch(`/api/experts/${id}`);
+    if (!res.ok) {
+      if (res.status === 404) return null;
+      throw new Error(`Failed to fetch expert: ${res.statusText}`);
     }
-    return null;
+    const data = await res.json();
+    return data as Expert;
   } catch (error) {
     console.error("Error fetching expert:", error);
     return null;
   }
 };
 
-export const getExperts = async () => {
+export const getExperts = async (): Promise<Expert[]> => {
   try {
-    const q = query(
-      collection(db, EXPERTS_COLLECTION),
-      orderBy('name', 'asc')
-    );
-
-    const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => ({
-      ...doc.data(),
-      id: doc.id
-    })) as Expert[];
+    const res = await fetch('/api/experts');
+    if (!res.ok) {
+      throw new Error(`Failed to fetch experts: ${res.statusText}`);
+    }
+    const data = await res.json();
+    return data as Expert[];
   } catch (error) {
     console.error("Error fetching experts:", error);
     return [];
   }
 };
 
-export const createExpert = async (expertData: Omit<Expert, 'id' | 'createdAt'>) => {
+export const createExpert = async (expertData: Omit<Expert, 'id' | 'createdAt'>): Promise<string | undefined> => {
   try {
-    const docRef = await addDoc(collection(db, EXPERTS_COLLECTION), {
-      ...expertData,
-      createdAt: Timestamp.now(),
+    const res = await fetch('/api/experts', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(expertData),
     });
-    return docRef.id;
+    if (!res.ok) {
+      throw new Error(`Failed to create expert: ${res.statusText}`);
+    }
+    const data = await res.json();
+    return data.id;
   } catch (error) {
-    handleFirestoreError(error, OperationType.CREATE, EXPERTS_COLLECTION);
+    console.error("Error creating expert:", error);
+    throw error;
   }
 };
 
-export const updateExpert = async (expertId: string, expertData: Partial<Expert>) => {
+export const updateExpert = async (expertId: string, expertData: Partial<Expert>): Promise<boolean> => {
   try {
-    const docRef = doc(db, EXPERTS_COLLECTION, expertId);
-    await updateDoc(docRef, expertData);
-    return true;
+    const res = await fetch(`/api/experts/${expertId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(expertData),
+    });
+    return res.ok;
   } catch (error) {
-    handleFirestoreError(error, OperationType.UPDATE, EXPERTS_COLLECTION);
+    console.error("Error updating expert:", error);
     return false;
   }
 };
 
-export const deleteExpert = async (expertId: string) => {
+export const deleteExpert = async (expertId: string): Promise<boolean> => {
   try {
-    await deleteDoc(doc(db, EXPERTS_COLLECTION, expertId));
-    return true;
+    if (!expertId) {
+      throw new Error("Expert ID is required to delete.");
+    }
+    const res = await fetch(`/api/experts/${expertId}`, {
+      method: 'DELETE',
+    });
+    return res.ok;
   } catch (error) {
-    handleFirestoreError(error, OperationType.DELETE, EXPERTS_COLLECTION);
+    console.error("Error deleting expert:", error);
     return false;
   }
 };
+

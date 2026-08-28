@@ -1,24 +1,33 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { onAuthStateChanged, User } from 'firebase/auth';
-import { auth } from './firebase';
+import { getStoredAdminUser, AppUser } from './auth';
 
 interface AuthContextType {
-  user: User | null;
+  user: AppUser | null;
   loading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType>({ user: null, loading: true });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<AppUser | null>(() => getStoredAdminUser());
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
+    // Initial check from stored session
+    const stored = getStoredAdminUser();
+    setUser(stored);
+    setLoading(false);
+
+    const handleAuthEvent = () => {
+      const activeStored = getStoredAdminUser();
+      setUser(activeStored);
       setLoading(false);
-    });
-    return unsubscribe;
+    };
+
+    window.addEventListener("quotient_auth_changed", handleAuthEvent);
+    return () => {
+      window.removeEventListener("quotient_auth_changed", handleAuthEvent);
+    };
   }, []);
 
   return (
@@ -29,3 +38,5 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 };
 
 export const useAuth = () => useContext(AuthContext);
+
+

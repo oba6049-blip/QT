@@ -1,135 +1,116 @@
-import { collection, query, getDocs, where, limit, orderBy, Timestamp, addDoc, doc, deleteDoc, getDoc } from 'firebase/firestore';
-import { db, OperationType, handleFirestoreError } from '../lib/firebase';
 import { Article } from '../types';
-import { ARTICLES } from '../constants';
 
-const ARTICLES_COLLECTION = 'articles';
-
-export const getArticleById = async (id: string) => {
+export const getArticleById = async (id: string): Promise<Article | null> => {
   try {
-    const docRef = doc(db, ARTICLES_COLLECTION, id);
-    const docSnap = await getDoc(docRef);
-    
-    if (docSnap.exists()) {
-      return {
-        ...docSnap.data(),
-        id: docSnap.id
-      } as Article;
+    const res = await fetch(`/api/articles/${id}`);
+    if (!res.ok) {
+      if (res.status === 404) return null;
+      throw new Error(`Failed to fetch article: ${res.statusText}`);
     }
-    
-    return null;
+    const data = await res.json();
+    return data as Article;
   } catch (error) {
     console.error("Error fetching article:", error);
     return null;
   }
 };
 
-export const getArticles = async (featuredOnly = false) => {
+export const getArticles = async (featuredOnly = false): Promise<Article[]> => {
   try {
-    let q = query(
-      collection(db, ARTICLES_COLLECTION),
-      orderBy('createdAt', 'desc'),
-      limit(10)
-    );
-
-    if (featuredOnly) {
-      q = query(
-        collection(db, ARTICLES_COLLECTION),
-        where('featured', '==', true),
-        orderBy('createdAt', 'desc'),
-        limit(1)
-      );
+    const url = featuredOnly ? '/api/articles?featured=true' : '/api/articles';
+    const res = await fetch(url);
+    if (!res.ok) {
+      throw new Error(`Failed to fetch articles: ${res.statusText}`);
     }
-
-    const querySnapshot = await getDocs(q);
-    const articles = querySnapshot.docs.map(doc => ({
-      ...doc.data(),
-      id: doc.id
-    })) as Article[];
-
-    return articles;
+    const data = await res.json();
+    return data as Article[];
   } catch (error) {
     console.error("Error fetching articles:", error);
     return [];
   }
 };
 
-export const getArticlesByCategory = async (category: string) => {
+export const getArticlesByCategory = async (category: string): Promise<Article[]> => {
   try {
-    const q = query(
-      collection(db, ARTICLES_COLLECTION),
-      where('category', '==', category),
-      orderBy('createdAt', 'desc'),
-      limit(20)
-    );
-    const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => ({
-      ...doc.data(),
-      id: doc.id
-    })) as Article[];
-  } catch (error) {
-    handleFirestoreError(error, OperationType.LIST, ARTICLES_COLLECTION);
-    return [];
-  }
-};
-
-export const getTrendingArticles = async () => {
-  try {
-    const q = query(
-      collection(db, ARTICLES_COLLECTION),
-      orderBy('createdAt', 'desc'),
-      limit(6)
-    );
-    const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => ({
-      ...doc.data(),
-      id: doc.id
-    })) as Article[];
-  } catch (error) {
-    handleFirestoreError(error, OperationType.LIST, ARTICLES_COLLECTION);
-    return [];
-  }
-};
-
-export const createArticle = async (articleData: Omit<Article, 'id' | 'createdAt'>) => {
-  try {
-    const docRef = await addDoc(collection(db, ARTICLES_COLLECTION), {
-      ...articleData,
-      createdAt: Timestamp.now(),
-    });
-    return docRef.id;
-  } catch (error) {
-    handleFirestoreError(error, OperationType.CREATE, ARTICLES_COLLECTION);
-  }
-};
-
-export const deleteArticle = async (articleId: string) => {
-  try {
-    if (typeof articleId !== 'string') {
-      throw new Error(`Invalid article ID type: ${typeof articleId}. ID must be a string.`);
+    const res = await fetch(`/api/articles?category=${encodeURIComponent(category)}`);
+    if (!res.ok) {
+      throw new Error(`Failed to fetch category articles: ${res.statusText}`);
     }
-    await deleteDoc(doc(db, ARTICLES_COLLECTION, articleId));
-    return true;
+    const data = await res.json();
+    return data as Article[];
   } catch (error) {
-    handleFirestoreError(error, OperationType.DELETE, ARTICLES_COLLECTION);
+    console.error("Error fetching articles by category:", error);
+    return [];
+  }
+};
+
+export const getTrendingArticles = async (): Promise<Article[]> => {
+  try {
+    const res = await fetch('/api/articles?trending=true');
+    if (!res.ok) {
+      throw new Error(`Failed to fetch trending articles: ${res.statusText}`);
+    }
+    const data = await res.json();
+    return data as Article[];
+  } catch (error) {
+    console.error("Error fetching trending articles:", error);
+    return [];
+  }
+};
+
+export const createArticle = async (articleData: Omit<Article, 'id' | 'createdAt'>): Promise<string | undefined> => {
+  try {
+    const res = await fetch('/api/articles', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(articleData),
+    });
+    if (!res.ok) {
+      throw new Error(`Failed to create article: ${res.statusText}`);
+    }
+    const data = await res.json();
+    return data.id;
+  } catch (error) {
+    console.error("Error creating article:", error);
+    throw error;
+  }
+};
+
+export const updateArticle = async (articleId: string, articleData: Partial<Article>): Promise<boolean> => {
+  try {
+    const res = await fetch(`/api/articles/${articleId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(articleData),
+    });
+    return res.ok;
+  } catch (error) {
+    console.error("Error updating article:", error);
     return false;
   }
 };
 
-export const seedDatabase = async (userId: string) => {
+export const deleteArticle = async (articleId: string): Promise<boolean> => {
   try {
-    const existing = await getArticles();
-    if (existing.length > 0) return;
-
-    console.log('Seeding database with initial articles...');
-    for (const article of ARTICLES) {
-      await addDoc(collection(db, ARTICLES_COLLECTION), {
-        ...article,
-        createdAt: Timestamp.now(),
-        authorId: userId 
-      });
+    if (!articleId) {
+      throw new Error("Article ID is required to delete.");
     }
+    const res = await fetch(`/api/articles/${articleId}`, {
+      method: 'DELETE',
+    });
+    return res.ok;
   } catch (error) {
-    console.error('Error seeding database:', error);
+    console.error("Error deleting article:", error);
+    return false;
   }
 };
+
+export const seedDatabase = async (_userId?: string): Promise<void> => {
+  // Database auto-seeds in backend
+  console.log("MongoDB is auto-seeded and active.");
+};
+

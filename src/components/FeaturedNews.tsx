@@ -50,76 +50,87 @@ export default function FeaturedNews() {
           </Link>
         </div>
 
-        <div className="grid lg:grid-cols-12 gap-12">
-          {/* Main Featured */}
-          {featured && (
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="lg:col-span-8 group cursor-pointer"
-            >
-              <Link to={`/article/${featured.id}`} className="block border-none outline-none group">
-                <div className="relative overflow-hidden mb-8 border border-slate-100">
-                  <img 
-                    src={featured.image} 
-                    alt={featured.title} 
-                    className="w-full aspect-16/9 object-cover group-hover:scale-105 transition-transform duration-1000" 
-                  />
-                  <div className="absolute top-6 left-6">
-                    <span className="bg-black text-white px-3 py-1 text-[10px] font-bold uppercase tracking-widest">{featured.category}</span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-4 mb-4">
-                  <span className="editorial-label text-brand-accent">Special Report</span>
-                  <span className="text-slate-300">•</span>
-                  <span className="editorial-label">{featured.readTime} read</span>
-                </div>
-                <h3 className="text-3xl md:text-5xl font-editorial font-bold mb-6 group-hover:underline leading-tight text-black">
-                  {featured.title}
-                </h3>
-                <p className="text-xl text-slate-600 leading-relaxed max-w-3xl mb-8">
-                  {featured.excerpt}
-                </p>
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 overflow-hidden">
-                    <img src={`https://ui-avatars.com/api/?name=${featured.author}`} alt={featured.author} className="w-full h-full object-cover" />
-                  </div>
-                  <div>
-                     <p className="text-sm font-bold text-black">{featured.author}</p>
-                     <p className="text-xs text-slate-400">{featured.date} • {featured.authorDesignation || 'Contributor'}</p>
-                  </div>
-                </div>
-              </Link>
-            </motion.div>
-          )}
-
-          {/* Sidebar News */}
-          <div className="lg:col-span-4 flex flex-col gap-10">
-            {others.map((article, idx) => (
+        {articles.length === 0 ? (
+          <div className="p-12 border border-dashed border-slate-200 text-center rounded-lg">
+            <p className="text-slate-500 font-serif italic text-lg mb-2">No articles published in the archive yet.</p>
+            <p className="text-slate-400 text-xs">Articles created in the Editorial Dashboard will appear here immediately.</p>
+          </div>
+        ) : (
+          <div className="grid lg:grid-cols-12 gap-12">
+            {/* Main Featured */}
+            {featured && (
               <motion.div 
-                key={article.id}
-                initial={{ opacity: 0, x: 20 }}
-                whileInView={{ opacity: 1, x: 0 }}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: idx * 0.1 }}
-                className="group cursor-pointer border-b border-slate-50 pb-8 last:border-0"
+                className="lg:col-span-8 group cursor-pointer"
               >
-                <Link to={`/article/${article.id}`} className="block border-none outline-none">
-                  <span className="editorial-label text-brand-accent mb-3 block">{article.category}</span>
-                  <h4 className="font-bold text-xl leading-snug group-hover:underline mb-3">
-                    {article.title}
-                  </h4>
-                  <div className="flex items-center gap-2 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                    <span>{article.author}</span>
-                    <span>•</span>
-                    <span>{article.readTime}</span>
+                <Link to={`/article/${featured.id}`} className="block border-none outline-none group">
+                  <div className="relative overflow-hidden mb-8 border border-slate-100">
+                    <img 
+                      src={featured.image} 
+                      alt={featured.title} 
+                      className="w-full aspect-16/9 object-cover group-hover:scale-105 transition-transform duration-1000" 
+                      referrerPolicy="no-referrer"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&fit=crop&q=80&w=1200";
+                      }}
+                    />
+                    <div className="absolute top-6 left-6">
+                      <span className="bg-black text-white px-3 py-1 text-[10px] font-bold uppercase tracking-widest">{featured.category}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4 mb-4">
+                    <span className="editorial-label text-brand-accent">Special Report</span>
+                    <span className="text-slate-300">•</span>
+                    <span className="editorial-label">{featured.readTime} read</span>
+                  </div>
+                  <h3 className="text-3xl md:text-5xl font-editorial font-bold mb-6 group-hover:underline leading-tight text-black">
+                    {featured.title}
+                  </h3>
+                  <p className="text-xl text-slate-600 leading-relaxed max-w-3xl mb-8">
+                    {featured.excerpt}
+                  </p>
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 overflow-hidden">
+                      <img src={`https://ui-avatars.com/api/?name=${featured.author}`} alt={featured.author} className="w-full h-full object-cover" />
+                    </div>
+                    <div>
+                       <p className="text-sm font-bold text-black">{featured.author}</p>
+                       <p className="text-xs text-slate-400">{featured.date} • {featured.authorDesignation || 'Contributor'}</p>
+                    </div>
                   </div>
                 </Link>
               </motion.div>
-            ))}
+            )}
+
+            {/* Sidebar News */}
+            <div className="lg:col-span-4 flex flex-col gap-10">
+              {others.map((article, idx) => (
+                <motion.div 
+                  key={article.id}
+                  initial={{ opacity: 0, x: 20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: idx * 0.1 }}
+                  className="group cursor-pointer border-b border-slate-50 pb-8 last:border-0"
+                >
+                  <Link to={`/article/${article.id}`} className="block border-none outline-none">
+                    <span className="editorial-label text-brand-accent mb-3 block">{article.category}</span>
+                    <h4 className="font-bold text-xl leading-snug group-hover:underline mb-3">
+                      {article.title}
+                    </h4>
+                    <div className="flex items-center gap-2 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                      <span>{article.author}</span>
+                      <span>•</span>
+                      <span>{article.readTime}</span>
+                    </div>
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </section>
   );
