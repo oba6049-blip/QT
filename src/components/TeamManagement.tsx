@@ -780,7 +780,7 @@ export default function TeamManagement() {
                     <input
                       type="email"
                       required
-                      placeholder="amara.nwosu@quotientsafrica.com"
+                      placeholder="amara.nwosu@techquonews.com"
                       value={formEmail}
                       onChange={(e) => setFormEmail(e.target.value)}
                       disabled={editingUser?.email.toLowerCase() === "subairnurudeen20@gmail.com"}

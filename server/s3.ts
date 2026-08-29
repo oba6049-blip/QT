@@ -40,7 +40,7 @@ export function getS3Config() {
   const region = runtimeRegionOverride || process.env.AWS_REGION || process.env.AWS_DEFAULT_REGION || extractedRegion || "us-east-1";
   const accessKeyId = runtimeAccessKeyOverride || process.env.AWS_ACCESS_KEY_ID || "";
   const secretAccessKey = runtimeSecretKeyOverride || process.env.AWS_SECRET_ACCESS_KEY || "";
-  const bucket = runtimeBucketOverride || process.env.AWS_S3_BUCKET_NAME || process.env.AWS_BUCKET_NAME || process.env.S3_BUCKET || extractedBucket || "quotient-africa-bucket";
+  const bucket = runtimeBucketOverride || process.env.AWS_S3_BUCKET_NAME || process.env.AWS_BUCKET_NAME || process.env.S3_BUCKET || extractedBucket || "techquo-news-bucket";
   const endpoint = process.env.AWS_S3_ENDPOINT || undefined;
   const customDomain = process.env.AWS_S3_CUSTOM_DOMAIN || undefined;
   const baseUrl = `https://${bucket}.s3.${region}.amazonaws.com`;
@@ -269,7 +269,7 @@ export async function testS3Upload(testBucket?: string, testRegion?: string): Pr
     const command = new PutObjectCommand({
       Bucket: targetBucket,
       Key: testKey,
-      Body: Buffer.from("Quotients Africa S3 Storage Test"),
+      Body: Buffer.from("TechQuo News S3 Storage Test"),
       ContentType: "text/plain",
     });
 

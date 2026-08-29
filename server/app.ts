@@ -3,9 +3,18 @@ import dotenv from "dotenv";
 import {
   getArticlesFromDb,
   getArticleByIdFromDb,
+  getArticleBySlugFromDb,
+  getArticlesByContributorSlug,
   createArticleInDb,
   updateArticleInDb,
   deleteArticleFromDb,
+  getContributorsFromDb,
+  getContributorByIdFromDb,
+  getContributorBySlugFromDb,
+  createContributorInDb,
+  updateContributorInDb,
+  deleteContributorFromDb,
+  searchContentFromDb,
   getEventsFromDb,
   getEventByIdFromDb,
   createEventInDb,
@@ -32,7 +41,7 @@ import {
   createUserInDb,
   updateUserInDb,
   deleteUserInDb,
-  changeUserPasswordInDb
+  changeUserPasswordInDb,
 } from "./db";
 import {
   uploadToS3,
@@ -44,6 +53,11 @@ import {
   getS3Config,
   fetchFromS3
 } from "./s3";
+import {
+  generateSitemapXml,
+  generateRobotsTxt,
+  getBaseUrl
+} from "./seo";
 
 // Load environment variables
 dotenv.config();
@@ -64,6 +78,36 @@ export function createApp(): express.Application {
       return res.sendStatus(200);
     }
     next();
+  });
+
+  // -------------------------------------------------------------
+  // SEO & CRAWLER DISCOVERY ROUTES
+  // -------------------------------------------------------------
+
+  app.get("/sitemap.xml", async (req, res) => {
+    try {
+      const baseUrl = getBaseUrl(req);
+      const sitemap = await generateSitemapXml(baseUrl);
+      res.set("Content-Type", "application/xml; charset=utf-8");
+      res.set("Cache-Control", "public, max-age=60, s-maxage=300");
+      res.send(sitemap);
+    } catch (e: any) {
+      console.error("[SEO] Error generating dynamic sitemap:", e);
+      res.status(500).send("<?xml version=\"1.0\" encoding=\"UTF-8\"?><error>Failed to generate sitemap</error>");
+    }
+  });
+
+  app.get("/robots.txt", (req, res) => {
+    try {
+      const baseUrl = getBaseUrl(req);
+      const robots = generateRobotsTxt(baseUrl);
+      res.set("Content-Type", "text/plain; charset=utf-8");
+      res.set("Cache-Control", "public, max-age=3600");
+      res.send(robots);
+    } catch (e: any) {
+      console.error("[SEO] Error generating robots.txt:", e);
+      res.status(500).send("User-agent: *\nDisallow: /admin/\nDisallow: /api/\n");
+    }
   });
 
   // -------------------------------------------------------------
@@ -272,11 +316,25 @@ export function createApp(): express.Application {
     try {
       const featured = req.query.featured !== undefined ? req.query.featured === "true" : undefined;
       const category = typeof req.query.category === "string" ? req.query.category : undefined;
-      const trending = req.query.trending === "true";
+      const trending = req.query.trending !== undefined ? req.query.trending === "true" : undefined;
+      const contributorId = typeof req.query.contributorId === "string" ? req.query.contributorId : undefined;
+      const tag = typeof req.query.tag === "string" ? req.query.tag : undefined;
       const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : (trending ? 6 : (featured ? 1 : 50));
 
-      const articles = await getArticlesFromDb({ featured, category, limit, trending });
+      const articles = await getArticlesFromDb({ featured, category, limit, trending, contributorId, tag });
       res.json(articles);
+    } catch (e: any) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  app.get("/api/articles/slug/:slug", async (req, res) => {
+    try {
+      const article = await getArticleBySlugFromDb(req.params.slug);
+      if (!article) {
+        return res.status(404).json({ error: "Article not found" });
+      }
+      res.json(article);
     } catch (e: any) {
       res.status(500).json({ error: e.message });
     }
@@ -297,7 +355,8 @@ export function createApp(): express.Application {
   app.post("/api/articles", async (req, res) => {
     try {
       const id = await createArticleInDb(req.body);
-      res.status(201).json({ id, message: "Article created successfully" });
+      const article = await getArticleByIdFromDb(id);
+      res.status(201).json({ id, article, message: "Article created successfully" });
     } catch (e: any) {
       res.status(500).json({ error: e.message });
     }
@@ -306,7 +365,8 @@ export function createApp(): express.Application {
   app.put("/api/articles/:id", async (req, res) => {
     try {
       const success = await updateArticleInDb(req.params.id, req.body);
-      res.json({ success });
+      const updatedArticle = await getArticleByIdFromDb(req.params.id);
+      res.json({ success, article: updatedArticle });
     } catch (e: any) {
       res.status(500).json({ error: e.message });
     }
@@ -334,6 +394,98 @@ export function createApp(): express.Application {
       }
 
       res.json({ success });
+    } catch (e: any) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  // ---------------- CONTRIBUTORS ----------------
+  app.get("/api/contributors", async (req, res) => {
+    try {
+      const status = typeof req.query.status === "string" ? req.query.status : undefined;
+      const contributors = await getContributorsFromDb(status === "all" ? {} : (status ? { status } : { status: "active" }));
+      res.json(contributors);
+    } catch (e: any) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  app.get("/api/contributors/:slug/articles", async (req, res) => {
+    try {
+      const articles = await getArticlesByContributorSlug(req.params.slug);
+      res.json(articles);
+    } catch (e: any) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  app.get("/api/contributors/:slug", async (req, res) => {
+    try {
+      const contributor = await getContributorByIdFromDb(req.params.slug);
+      if (!contributor) {
+        return res.status(404).json({ error: "Contributor not found" });
+      }
+      res.json(contributor);
+    } catch (e: any) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  app.post("/api/contributors", async (req, res) => {
+    try {
+      const { name } = req.body;
+      if (!name || !name.trim()) {
+        return res.status(400).json({ error: "Contributor full name is required" });
+      }
+      const id = await createContributorInDb(req.body);
+      const created = await getContributorByIdFromDb(id);
+      res.status(201).json({ id, contributor: created, message: "Contributor created successfully" });
+    } catch (e: any) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  app.put("/api/contributors/:id", async (req, res) => {
+    try {
+      const success = await updateContributorInDb(req.params.id, req.body);
+      if (!success) {
+        return res.status(404).json({ error: "Contributor not found or no changes made" });
+      }
+      const updated = await getContributorByIdFromDb(req.params.id);
+      res.json({ success, contributor: updated, message: "Contributor updated successfully" });
+    } catch (e: any) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  app.delete("/api/contributors/:id", async (req, res) => {
+    try {
+      const contributor = await getContributorByIdFromDb(req.params.id);
+      const success = await deleteContributorFromDb(req.params.id);
+
+      if (contributor) {
+        const keys = extractMediaKeys([contributor.profileImage, contributor.avatar]);
+        for (const key of keys) {
+          try {
+            await deleteFromS3(key);
+          } catch (delErr) {
+            console.warn(`[S3 Auto-delete] Error cleaning up contributor image '${key}':`, delErr);
+          }
+        }
+      }
+
+      res.json({ success, message: "Contributor deleted successfully" });
+    } catch (e: any) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  // ---------------- UNIFIED SEARCH ----------------
+  app.get("/api/search", async (req, res) => {
+    try {
+      const query = (req.query.q as string) || "";
+      const results = await searchContentFromDb(query);
+      res.json(results);
     } catch (e: any) {
       res.status(500).json({ error: e.message });
     }

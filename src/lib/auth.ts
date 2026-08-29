@@ -20,11 +20,12 @@ export interface AdminUserSession {
 
 export type AppUser = AdminUserSession;
 
-const AUTH_STORAGE_KEY = "quotient_admin_session";
+const AUTH_STORAGE_KEY = "techquo_admin_session";
+const LEGACY_STORAGE_KEY = "quotient_admin_session";
 
 export function getStoredAdminUser(): AdminUserSession | null {
   try {
-    const raw = localStorage.getItem(AUTH_STORAGE_KEY);
+    const raw = localStorage.getItem(AUTH_STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
       if (parsed && typeof parsed.email === "string") {
@@ -34,6 +35,8 @@ export function getStoredAdminUser(): AdminUserSession | null {
             parsed.allowedTabs = [
               "create",
               "manage",
+              "create-contributor",
+              "manage-contributors",
               "create-event",
               "manage-events",
               "create-expert",
@@ -44,7 +47,7 @@ export function getStoredAdminUser(): AdminUserSession | null {
               "team",
             ];
           } else {
-            parsed.allowedTabs = ["create", "manage"];
+            parsed.allowedTabs = ["create", "manage", "create-contributor", "manage-contributors"];
           }
         }
         return parsed;
@@ -60,13 +63,16 @@ export function setStoredAdminUser(user: AdminUserSession | null) {
   try {
     if (user) {
       localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(user));
+      localStorage.removeItem(LEGACY_STORAGE_KEY);
     } else {
       localStorage.removeItem(AUTH_STORAGE_KEY);
+      localStorage.removeItem(LEGACY_STORAGE_KEY);
     }
   } catch (e) {
     // Ignore storage write errors
   }
   try {
+    window.dispatchEvent(new CustomEvent("techquo_auth_changed", { detail: user }));
     window.dispatchEvent(new CustomEvent("quotient_auth_changed", { detail: user }));
   } catch (e) {}
 }
@@ -131,6 +137,8 @@ export async function signInAdminWithEmail(
         allowedTabs: [
           "create",
           "manage",
+          "create-contributor",
+          "manage-contributors",
           "create-event",
           "manage-events",
           "create-expert",

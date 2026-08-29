@@ -43,7 +43,7 @@ export default function WhyChooseUs() {
               A New Standard in <br /><span className="italic-editorial">Digital Journalism.</span>
             </h2>
             <p className="text-xl text-slate-600 mb-10 leading-relaxed">
-              We started Quotients Africa because we believed the world needed a more rigorous, thoughtful, and professional approach to tech and business news.
+              We started TechQuo News because we believed the world needed a more rigorous, thoughtful, and professional approach to tech and business news.
             </p>
             
             <div className="space-y-6">

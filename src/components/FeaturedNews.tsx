@@ -17,8 +17,8 @@ export default function FeaturedNews() {
     fetchArticles();
   }, []);
 
-  const featured = articles.find(a => a.featured);
-  const others = articles.filter(a => !a.featured);
+  const featured = articles.find(a => a.featured) || articles[0];
+  const others = articles.filter(a => (a.id && a.id !== featured?.id) && (a.slug ? a.slug !== featured?.slug : true));
 
   if (loading && articles.length === 0) {
     return (
@@ -58,76 +58,93 @@ export default function FeaturedNews() {
         ) : (
           <div className="grid lg:grid-cols-12 gap-12">
             {/* Main Featured */}
-            {featured && (
-              <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                className="lg:col-span-8 group cursor-pointer"
-              >
-                <Link to={`/article/${featured.id}`} className="block border-none outline-none group">
-                  <div className="relative overflow-hidden mb-8 border border-slate-100">
-                    <img 
-                      src={featured.image} 
-                      alt={featured.title} 
-                      className="w-full aspect-16/9 object-cover group-hover:scale-105 transition-transform duration-1000" 
-                      referrerPolicy="no-referrer"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&fit=crop&q=80&w=1200";
-                      }}
-                    />
-                    <div className="absolute top-6 left-6">
-                      <span className="bg-black text-white px-3 py-1 text-[10px] font-bold uppercase tracking-widest">{featured.category}</span>
+            {featured && (() => {
+              const authorSlug = featured.contributor?.slug || (featured.author ? featured.author.toLowerCase().trim().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-') : 'editorial-team');
+              const authorImg = featured.contributor?.profileImage || featured.authorImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(featured.author)}`;
+              const catSlug = (featured.category || 'technology').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-');
+              const artSlug = featured.slug || featured.id;
+              
+              return (
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  className="lg:col-span-8 group cursor-pointer"
+                >
+                  <Link to={`/${catSlug}/${artSlug}`} className="block border-none outline-none group">
+                    <div className="relative overflow-hidden mb-8 border border-slate-100">
+                      <img 
+                        src={featured.image} 
+                        alt={featured.title} 
+                        className="w-full aspect-16/9 object-cover group-hover:scale-105 transition-transform duration-1000" 
+                        referrerPolicy="no-referrer"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&fit=crop&q=80&w=1200";
+                        }}
+                      />
+                      <div className="absolute top-6 left-6">
+                        <span className="bg-black text-white px-3 py-1 text-[10px] font-bold uppercase tracking-widest">{featured.category}</span>
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-4 mb-4">
-                    <span className="editorial-label text-brand-accent">Special Report</span>
-                    <span className="text-slate-300">•</span>
-                    <span className="editorial-label">{featured.readTime} read</span>
-                  </div>
-                  <h3 className="text-3xl md:text-5xl font-editorial font-bold mb-6 group-hover:underline leading-tight text-black">
-                    {featured.title}
-                  </h3>
-                  <p className="text-xl text-slate-600 leading-relaxed max-w-3xl mb-8">
-                    {featured.excerpt}
-                  </p>
+                    <div className="flex items-center gap-4 mb-4">
+                      <span className="editorial-label text-brand-accent">Special Report</span>
+                      <span className="text-slate-300">•</span>
+                      <span className="editorial-label">{featured.readTime} read</span>
+                    </div>
+                    <h3 className="text-3xl md:text-5xl font-editorial font-bold mb-6 group-hover:underline leading-tight text-black">
+                      {featured.title}
+                    </h3>
+                    <p className="text-xl text-slate-600 leading-relaxed max-w-3xl mb-8">
+                      {featured.excerpt}
+                    </p>
+                  </Link>
+
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 overflow-hidden">
-                      <img src={`https://ui-avatars.com/api/?name=${featured.author}`} alt={featured.author} className="w-full h-full object-cover" />
-                    </div>
+                    <Link to={`/contributors/${authorSlug}`} className="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 overflow-hidden shrink-0 hover:ring-2 hover:ring-brand-accent transition-all">
+                      <img src={authorImg} alt={featured.author} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                    </Link>
                     <div>
-                       <p className="text-sm font-bold text-black">{featured.author}</p>
+                       <Link to={`/contributors/${authorSlug}`} className="text-sm font-bold text-black hover:text-brand-accent transition-colors block">
+                         {featured.author}
+                       </Link>
                        <p className="text-xs text-slate-400">{featured.date} • {featured.authorDesignation || 'Contributor'}</p>
                     </div>
                   </div>
-                </Link>
-              </motion.div>
-            )}
+                </motion.div>
+              );
+            })()}
 
             {/* Sidebar News */}
             <div className="lg:col-span-4 flex flex-col gap-10">
-              {others.map((article, idx) => (
-                <motion.div 
-                  key={article.id}
-                  initial={{ opacity: 0, x: 20 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: idx * 0.1 }}
-                  className="group cursor-pointer border-b border-slate-50 pb-8 last:border-0"
-                >
-                  <Link to={`/article/${article.id}`} className="block border-none outline-none">
-                    <span className="editorial-label text-brand-accent mb-3 block">{article.category}</span>
-                    <h4 className="font-bold text-xl leading-snug group-hover:underline mb-3">
-                      {article.title}
-                    </h4>
+              {others.map((article, idx) => {
+                const authorSlug = article.contributor?.slug || (article.author ? article.author.toLowerCase().trim().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-') : 'editorial-team');
+                const catSlug = (article.category || 'technology').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-');
+                const artSlug = article.slug || article.id;
+                return (
+                  <motion.div 
+                    key={article.id}
+                    initial={{ opacity: 0, x: 20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: idx * 0.1 }}
+                    className="group cursor-pointer border-b border-slate-50 pb-8 last:border-0"
+                  >
+                    <Link to={`/${catSlug}/${artSlug}`} className="block border-none outline-none">
+                      <span className="editorial-label text-brand-accent mb-3 block">{article.category}</span>
+                      <h4 className="font-bold text-xl leading-snug group-hover:underline mb-3">
+                        {article.title}
+                      </h4>
+                    </Link>
                     <div className="flex items-center gap-2 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                      <span>{article.author}</span>
+                      <Link to={`/contributors/${authorSlug}`} className="hover:text-black transition-colors">
+                        {article.author}
+                      </Link>
                       <span>•</span>
                       <span>{article.readTime}</span>
                     </div>
-                  </Link>
-                </motion.div>
-              ))}
+                  </motion.div>
+                );
+              })}
             </div>
           </div>
         )}

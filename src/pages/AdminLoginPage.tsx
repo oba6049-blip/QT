@@ -62,7 +62,7 @@ export default function AdminLoginPage() {
           to="/" 
           className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-black transition-colors"
         >
-          <ArrowLeft size={14} /> Back to Quotients Africa
+          <ArrowLeft size={14} /> Back to TechQuo News
         </Link>
       </div>
 
@@ -75,7 +75,7 @@ export default function AdminLoginPage() {
           </div>
           
           <h1 className="font-editorial text-2xl sm:text-3xl font-black uppercase tracking-tight text-slate-900 mb-1">
-            Quotients Africa<span className="text-brand-accent">.</span>
+            TechQuo News<span className="text-brand-accent">.</span>
           </h1>
           <p className="text-xs font-bold uppercase tracking-widest text-slate-400">
             Editorial Management Portal
@@ -105,7 +105,7 @@ export default function AdminLoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="editor@quotientsafrica.com"
+                placeholder="editor@techquonews.com"
                 className="w-full pl-10 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 focus:bg-white focus:border-black focus:outline-none text-sm text-slate-900 rounded-sm transition-all"
                 autoComplete="email"
               />
@@ -172,7 +172,7 @@ export default function AdminLoginPage() {
       {/* Footer copyright */}
       <div className="max-w-md w-full mx-auto text-center mt-6">
         <p className="text-[11px] text-slate-400 font-mono">
-          &copy; {new Date().getFullYear()} Quotients Africa Publication
+          &copy; {new Date().getFullYear()} TechQuo News Publication
         </p>
       </div>
     </div>

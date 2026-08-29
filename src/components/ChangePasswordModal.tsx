@@ -123,7 +123,7 @@ export default function ChangePasswordModal({
                 </h3>
                 <p className="text-xs text-slate-300">
                   {isMandatoryFirstLogin
-                    ? "Welcome to Quotients Africa! Please set your personal password."
+                    ? "Welcome to TechQuo News! Please set your personal password."
                     : `Manage security credentials for ${user.email}`}
                 </p>
               </div>

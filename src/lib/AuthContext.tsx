@@ -24,8 +24,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(false);
     };
 
+    window.addEventListener("techquo_auth_changed", handleAuthEvent);
     window.addEventListener("quotient_auth_changed", handleAuthEvent);
     return () => {
+      window.removeEventListener("techquo_auth_changed", handleAuthEvent);
       window.removeEventListener("quotient_auth_changed", handleAuthEvent);
     };
   }, []);

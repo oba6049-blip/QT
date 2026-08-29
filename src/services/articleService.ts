@@ -109,6 +109,35 @@ export const deleteArticle = async (articleId: string): Promise<boolean> => {
   }
 };
 
+export const getArticleBySlug = async (slug: string): Promise<Article | null> => {
+  try {
+    const res = await fetch(`/api/articles/slug/${encodeURIComponent(slug)}`);
+    if (!res.ok) {
+      if (res.status === 404) return null;
+      throw new Error(`Failed to fetch article by slug: ${res.statusText}`);
+    }
+    const data = await res.json();
+    return data as Article;
+  } catch (error) {
+    console.error("Error fetching article by slug:", error);
+    return null;
+  }
+};
+
+export const getArticlesByContributor = async (contributorId: string): Promise<Article[]> => {
+  try {
+    const res = await fetch(`/api/articles?contributorId=${encodeURIComponent(contributorId)}`);
+    if (!res.ok) {
+      throw new Error(`Failed to fetch articles for contributor: ${res.statusText}`);
+    }
+    const data = await res.json();
+    return data as Article[];
+  } catch (error) {
+    console.error("Error fetching articles by contributor:", error);
+    return [];
+  }
+};
+
 export const seedDatabase = async (_userId?: string): Promise<void> => {
   // Database auto-seeds in backend
   console.log("MongoDB is auto-seeded and active.");

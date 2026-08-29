@@ -102,7 +102,7 @@ export default function Hero() {
             <div className="flex flex-col sm:flex-row items-center gap-4">
               {!loading && featured ? (
                 <Link 
-                  to={`/article/${featured.id}`} 
+                  to={`/${(featured.category || 'technology').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-')}/${featured.slug || featured.id}`} 
                   className="w-full sm:w-auto bg-black text-white px-10 py-5 font-bold uppercase text-[12px] tracking-[0.2em] hover:bg-brand-accent transition-colors text-center"
                 >
                   Read Full Story
@@ -112,9 +112,9 @@ export default function Hero() {
                   Read Full Story
                 </button>
               )}
-              <button className="w-full sm:w-auto border border-slate-200 px-10 py-5 font-bold uppercase text-[12px] tracking-[0.2em] hover:bg-slate-50 transition-colors">
-                Become a Contributor
-              </button>
+              <Link to="/contributors" className="w-full sm:w-auto border border-slate-200 px-10 py-5 font-bold uppercase text-[12px] tracking-[0.2em] hover:bg-slate-50 transition-colors text-center">
+                Explore Contributors
+              </Link>
             </div>
 
             <div className="mt-16 flex items-center gap-12 pt-12 border-t border-slate-100">
@@ -125,7 +125,11 @@ export default function Hero() {
                     {loading ? (
                       <div className="w-full h-full animate-pulse bg-slate-200" />
                     ) : (
-                      <img src={featured?.author ? `https://ui-avatars.com/api/?name=${featured.author}` : "https://ui-avatars.com/api/?name=Admin"} alt="Author" />
+                      <img 
+                        src={featured?.contributor?.profileImage || featured?.authorImage || (featured?.author ? `https://ui-avatars.com/api/?name=${encodeURIComponent(featured.author)}` : "https://ui-avatars.com/api/?name=Admin")} 
+                        alt={featured?.author || "Author"} 
+                        referrerPolicy="no-referrer"
+                      />
                     )}
                   </div>
                   <div>
@@ -136,8 +140,13 @@ export default function Hero() {
                       </div>
                     ) : (
                       <>
-                        <p className="font-serif font-bold text-lg leading-tight">{featured?.author || "News Team"}</p>
-                        <p className="text-xs text-slate-500">{featured?.date || "Editorial Staff"}</p>
+                        <Link 
+                          to={`/contributors/${featured?.contributor?.slug || (featured?.author ? featured.author.toLowerCase().trim().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-') : 'editorial-team')}`}
+                          className="font-serif font-bold text-lg leading-tight hover:text-brand-accent transition-colors block"
+                        >
+                          {featured?.author || "News Team"}
+                        </Link>
+                        <p className="text-xs text-slate-500">{featured?.date || "Editorial Staff"} • {featured?.authorDesignation || 'Contributor'}</p>
                       </>
                     )}
                   </div>
@@ -168,19 +177,23 @@ export default function Hero() {
                   </div>
                 ))
               ) : trending.length > 0 ? (
-                trending.map((item, idx) => (
-                  <Link key={item.id} to={`/article/${item.id}`} className="group cursor-pointer block border-none outline-none">
-                    <div className="text-slate-200 font-serif text-5xl font-bold mb-1 group-hover:text-brand-accent transition-colors leading-none">
-                      {String(idx + 1).padStart(2, '0')}
-                    </div>
-                    <h4 className="font-bold text-xl leading-snug group-hover:underline">
-                      {item.title}
-                    </h4>
-                    <p className="text-xs text-slate-400 mt-2 uppercase tracking-wide">
-                      {item.date} • {item.category}
-                    </p>
-                  </Link>
-                ))
+                trending.map((item, idx) => {
+                  const catSlug = (item.category || 'technology').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-');
+                  const artSlug = item.slug || item.id;
+                  return (
+                    <Link key={item.id} to={`/${catSlug}/${artSlug}`} className="group cursor-pointer block border-none outline-none">
+                      <div className="text-slate-200 font-serif text-5xl font-bold mb-1 group-hover:text-brand-accent transition-colors leading-none">
+                        {String(idx + 1).padStart(2, '0')}
+                      </div>
+                      <h4 className="font-bold text-xl leading-snug group-hover:underline">
+                        {item.title}
+                      </h4>
+                      <p className="text-xs text-slate-400 mt-2 uppercase tracking-wide">
+                        {item.date} • {item.category}
+                      </p>
+                    </Link>
+                  );
+                })
               ) : (
                 <div className="p-6 border border-dashed border-slate-200 rounded-lg text-slate-400 text-sm">
                   <p className="font-medium text-slate-600 mb-1">No trending stories published yet</p>

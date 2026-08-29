@@ -47,7 +47,7 @@ export default function Newsletter() {
               <CheckCircle size={48} className="text-brand-accent" />
               <div>
                 <h3 className="text-3xl font-editorial font-bold mb-2">You're on the list.</h3>
-                <p className="text-slate-500">Welcome to Quotients Africa. Our briefing will arrive in your inbox shortly.</p>
+                <p className="text-slate-500">Welcome to TechQuo News. Our briefing will arrive in your inbox shortly.</p>
               </div>
             </motion.div>
           ) : (

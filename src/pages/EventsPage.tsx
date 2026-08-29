@@ -42,7 +42,7 @@ export default function EventsPage() {
               Events<span className="text-brand-accent">.</span>
             </h1>
             <p className="text-xl text-slate-500 max-w-2xl leading-relaxed">
-              Global meetups, high-stakes summits, and technical briefings for the Quotients Africa community.
+              Global meetups, high-stakes summits, and technical briefings for the TechQuo News community.
             </p>
           </header>
 
@@ -141,7 +141,7 @@ export default function EventsPage() {
           {/* Featured Sidebar / Call to Action */}
           <section className="mt-32 p-12 bg-brand-accent text-white rounded-2xl flex flex-col md:flex-row items-center justify-between gap-12">
             <div className="max-w-xl text-center md:text-left">
-              <h3 className="text-4xl font-editorial font-bold mb-4">Host an Event with Quotients Africa</h3>
+              <h3 className="text-4xl font-editorial font-bold mb-4">Host an Event with TechQuo News</h3>
               <p className="text-white/80 leading-relaxed">
                 Connect with our global network of 1M+ active readers. Partner with us for your next high-impact industry event.
               </p>

@@ -1,6 +1,6 @@
 {
-  "name": "Quotient Africa",
-  "description": "A premium digital media and news publishing platform for tech, business, and startup insights.",
+  "name": "TechQuo News",
+  "description": "TechQuo News - A premium digital media and news publishing platform with full dynamic SEO indexing, XML sitemap, and robots.txt.",
   "requestFramePermissions": [],
   "majorCapabilities": [
     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"

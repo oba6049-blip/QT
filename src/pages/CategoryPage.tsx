@@ -1,5 +1,6 @@
 import { useParams, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { Helmet } from "react-helmet-async";
 import { motion } from "motion/react";
 import { getArticlesByCategory } from "../services/articleService";
 import { Article } from "../types";
@@ -11,6 +12,17 @@ export default function CategoryPage() {
   const { category } = useParams<{ category: string }>();
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const cleanCategory = (category || "technology")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+  const displayCategory = cleanCategory.charAt(0).toUpperCase() + cleanCategory.slice(1);
+  const canonicalUrl = `https://techquonews.com/${cleanCategory}`;
+  const pageTitle = `${displayCategory} News & Analysis | TechQuo News`;
+  const pageDescription = `Read the latest ${displayCategory} news, tech market insights, startup rounds, and industry analysis on TechQuo News.`;
 
   useEffect(() => {
     if (category) {
@@ -25,10 +37,22 @@ export default function CategoryPage() {
     }
   }, [category]);
 
-  const displayCategory = category?.charAt(0).toUpperCase() + category!.slice(1);
-
   return (
     <>
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+        <link rel="canonical" href={canonicalUrl} />
+        <meta name="robots" content="index, follow" />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDescription} />
+        <meta property="og:url" content={canonicalUrl} />
+        <meta property="og:site_name" content="TechQuo News" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={pageDescription} />
+      </Helmet>
+
       <Navbar />
       <main className="min-h-screen pt-32 pb-20 bg-white">
         <div className="max-w-7xl mx-auto px-6 md:px-12">
@@ -55,12 +79,18 @@ export default function CategoryPage() {
             </div>
           ) : articles.length > 0 ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-12 lg:gap-x-16 lg:gap-y-24">
-              {articles.map((article, idx) => (
-                <Link
-                  key={article.id}
-                  to={`/article/${article.id}`}
-                  className="block outline-none"
-                >
+              {articles.map((article, idx) => {
+                const artCat = (article.category || cleanCategory)
+                  .toLowerCase()
+                  .trim()
+                  .replace(/[^a-z0-9]+/g, "-");
+                const artSlug = article.slug || article.id;
+                return (
+                  <Link
+                    key={article.id}
+                    to={`/${artCat}/${artSlug}`}
+                    className="block outline-none"
+                  >
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -98,7 +128,8 @@ export default function CategoryPage() {
                     </div>
                   </motion.div>
                 </Link>
-              ))}
+              );
+            })}
             </div>
           ) : (
             <div className="py-20 text-center border border-dashed border-slate-200">

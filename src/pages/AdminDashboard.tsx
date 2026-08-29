@@ -14,6 +14,9 @@ import { logout, hasAccessToTab, isSuperAdmin } from "../lib/auth";
 import RichTextEditor from "../components/RichTextEditor";
 import TeamManagement from "../components/TeamManagement";
 import ChangePasswordModal from "../components/ChangePasswordModal";
+import CreateContributorTab from "../components/CreateContributorTab";
+import ManageContributorsTab from "../components/ManageContributorsTab";
+import ContributorSelect from "../components/ContributorSelect";
 
 export default function AdminDashboard() {
   const { user } = useAuth();
@@ -38,7 +41,7 @@ export default function AdminDashboard() {
     if (user) {
       if (!hasAccessToTab(user, view)) {
         const ALL_TABS: DashboardTab[] = [
-          'create', 'manage', 'create-event', 'manage-events',
+          'create', 'manage', 'create-contributor', 'manage-contributors', 'create-event', 'manage-events',
           'create-expert', 'manage-experts', 'create-spotlight', 'manage-spotlight',
           'storage', 'team'
         ];
@@ -274,6 +277,8 @@ export default function AdminDashboard() {
     category: CATEGORIES[0].name,
     author: user?.displayName || "Admin",
     authorDesignation: "Contributor",
+    contributorId: "",
+    authorImage: "",
     date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
     readTime: "5 min",
     image: "",
@@ -319,7 +324,7 @@ export default function AdminDashboard() {
             <Users size={24} className="text-white" />
           </div>
           <span className="font-editorial font-black text-2xl tracking-tighter uppercase mb-2 block">
-            Quotients Africa<span className="text-brand-accent">.</span>
+            TechQuo News<span className="text-brand-accent">.</span>
           </span>
           <h1 className="text-xl font-editorial font-bold mb-2">Editorial Authentication Required</h1>
           <p className="text-slate-500 text-sm mb-8 leading-relaxed">
@@ -628,7 +633,7 @@ export default function AdminDashboard() {
       {/* Sidebar */}
       <aside className="w-64 bg-black text-white p-8 flex flex-col hidden lg:flex">
         <div className="flex items-center gap-1 mb-12">
-          <span className="font-editorial font-black text-2xl tracking-tighter uppercase">Quotients Africa<span className="text-brand-accent">.</span></span>
+          <span className="font-editorial font-black text-2xl tracking-tighter uppercase">TechQuo News<span className="text-brand-accent">.</span></span>
         </div>
         
         <nav className="flex-1 space-y-2">
@@ -649,6 +654,32 @@ export default function AdminDashboard() {
             >
               <LayoutDashboard size={18} />
               Manage feed
+            </button>
+          )}
+
+          {(hasAccessToTab(user, 'create-contributor') || hasAccessToTab(user, 'manage-contributors')) && (
+            <div className="pt-4 pb-2 px-4">
+               <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Contributors & Authors</p>
+            </div>
+          )}
+
+          {hasAccessToTab(user, 'create-contributor') && (
+            <button 
+              onClick={() => setView('create-contributor')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded text-sm font-bold uppercase tracking-wider transition-colors ${view === 'create-contributor' ? 'bg-white/10 text-brand-accent' : 'hover:bg-white/5 text-slate-400'}`}
+            >
+              <UserCheck size={18} />
+              Add Contributor
+            </button>
+          )}
+
+          {hasAccessToTab(user, 'manage-contributors') && (
+            <button 
+              onClick={() => setView('manage-contributors')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded text-sm font-bold uppercase tracking-wider transition-colors ${view === 'manage-contributors' ? 'bg-white/10 text-brand-accent' : 'hover:bg-white/5 text-slate-400'}`}
+            >
+              <Users size={18} />
+              Manage Authors
             </button>
           )}
           
@@ -815,7 +846,7 @@ export default function AdminDashboard() {
               </span>
             </div>
             <div className="text-[9px] text-slate-400 font-mono truncate">
-              Bucket: <strong className="text-slate-200">{dbStatus?.storage?.bucket || "quotient-africa-assets"}</strong>
+              Bucket: <strong className="text-slate-200">{dbStatus?.storage?.bucket || "techquo-news-assets"}</strong>
             </div>
           </div>
 
@@ -885,6 +916,8 @@ export default function AdminDashboard() {
               Welcome back, <strong className="text-slate-800">{user?.displayName || user?.email}</strong>. 
               {view === 'create' ? ' Create a new story.' : 
                view === 'manage' ? ' Manage your feed.' : 
+               view === 'create-contributor' ? ' Register a new contributing writer or analyst.' :
+               view === 'manage-contributors' ? ' Manage contributor directory, slugs, and profiles.' :
                view === 'create-event' ? ' Post an upcoming event.' : 
                view === 'manage-events' ? ' Manage scheduled events.' :
                view === 'create-expert' ? ' Add a new expert to the network.' :
@@ -927,6 +960,16 @@ export default function AdminDashboard() {
           {hasAccessToTab(user, 'manage') && (
             <button onClick={() => setView('manage')} className={`px-4 py-2 rounded text-xs font-bold uppercase whitespace-nowrap transition-colors ${view === 'manage' ? 'bg-black text-white' : 'bg-white border border-slate-200 text-slate-700'}`}>
               Feed
+            </button>
+          )}
+          {hasAccessToTab(user, 'create-contributor') && (
+            <button onClick={() => setView('create-contributor')} className={`px-4 py-2 rounded text-xs font-bold uppercase whitespace-nowrap transition-colors ${view === 'create-contributor' ? 'bg-black text-white' : 'bg-white border border-slate-200 text-slate-700'}`}>
+              + Contributor
+            </button>
+          )}
+          {hasAccessToTab(user, 'manage-contributors') && (
+            <button onClick={() => setView('manage-contributors')} className={`px-4 py-2 rounded text-xs font-bold uppercase whitespace-nowrap transition-colors ${view === 'manage-contributors' ? 'bg-black text-white' : 'bg-white border border-slate-200 text-slate-700'}`}>
+              Contributors
             </button>
           )}
           {hasAccessToTab(user, 'create-event') && (
@@ -1019,6 +1062,31 @@ export default function AdminDashboard() {
                       {CATEGORIES.map(cat => <option key={cat.name} value={cat.name}>{cat.name}</option>)}
                     </select>
                   </div>
+                </div>
+
+                {/* Contributor Database Selector */}
+                <div className="p-4 bg-slate-100/60 border border-slate-200 rounded">
+                  <ContributorSelect
+                    selectedContributorId={formData.contributorId}
+                    authorName={formData.author}
+                    onSelect={(c) => {
+                      if (c) {
+                        setFormData({
+                          ...formData,
+                          contributorId: c.id || c._id || "",
+                          author: c.name,
+                          authorDesignation: c.title || "Contributor",
+                          authorImage: c.profileImage || c.avatar || "",
+                        });
+                      } else {
+                        setFormData({
+                          ...formData,
+                          contributorId: "",
+                        });
+                      }
+                    }}
+                    onNavigateCreateContributor={() => setView('create-contributor')}
+                  />
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-8">
@@ -1749,7 +1817,7 @@ export default function AdminDashboard() {
                 <div className="p-4 bg-slate-50 border border-slate-200 rounded">
                   <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Current Active Bucket</p>
                   <p className="font-mono text-sm font-bold text-slate-900 truncate">
-                    {dbStatus?.storage?.bucket || "quotient-africa-bucket"}
+                    {dbStatus?.storage?.bucket || "techquo-news-bucket"}
                   </p>
                   <span className="text-[10px] text-slate-500 font-mono">AWS Region: {dbStatus?.storage?.region || "us-east-1"}</span>
                 </div>
@@ -1801,7 +1869,7 @@ export default function AdminDashboard() {
                       type="text"
                       value={s3BucketInput}
                       onChange={(e) => setS3BucketInput(e.target.value)}
-                      placeholder="e.g. quotients-africa or quotients-africa-bucket"
+                      placeholder="e.g. techquo-news or techquo-news-bucket"
                       className="w-full p-3 border border-slate-200 font-mono text-sm focus:outline-none focus:border-black rounded-none"
                     />
                     <p className="text-[11px] text-slate-400 mt-1">
@@ -1922,7 +1990,7 @@ export default function AdminDashboard() {
             <div className="bg-white border border-slate-200 p-8">
               <h3 className="text-lg font-editorial font-bold mb-4 flex items-center gap-2">
                 <HelpCircle size={18} className="text-slate-400" />
-                AWS S3 Recommended Settings for Quotients Africa
+                AWS S3 Recommended Settings for TechQuo News
               </h3>
 
               <div className="space-y-4 text-xs text-slate-600">
@@ -2019,6 +2087,10 @@ export default function AdminDashboard() {
               </div>
              </div>
           </section>
+        ) : view === 'create-contributor' ? (
+          <CreateContributorTab onSuccess={() => setView('manage-contributors')} />
+        ) : view === 'manage-contributors' ? (
+          <ManageContributorsTab onNavigateCreate={() => setView('create-contributor')} />
         ) : (
           <section className="max-w-2xl bg-white p-8 border border-slate-200 text-center py-16">
             <ShieldAlert size={48} className="mx-auto text-amber-500 mb-4" />

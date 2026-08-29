@@ -1,17 +1,54 @@
+export interface ContributorSocialLinks {
+  linkedin?: string;
+  twitter?: string;
+  website?: string;
+  github?: string;
+}
+
+export interface Contributor {
+  id: string;
+  _id?: string;
+  name: string;
+  slug: string;
+  profileImage: string;
+  avatar?: string;
+  title: string;
+  bio: string;
+  longBio?: string;
+  email?: string;
+  showEmail?: boolean;
+  socialLinks?: ContributorSocialLinks;
+  expertise?: string[];
+  status: 'active' | 'inactive';
+  joinedAt?: string;
+  totalArticles?: number;
+  createdAt?: any;
+  updatedAt?: any;
+}
+
 export interface Article {
   id: string;
+  _id?: string;
   title: string;
+  slug?: string;
   excerpt: string;
   content?: string;
   category: string;
   author: string;
   authorDesignation?: string;
   authorImage?: string;
+  contributorId?: string;
+  contributor?: Contributor;
   date: string;
+  publishedAt?: string;
   readTime: string;
   image: string;
   featured: boolean;
+  trending?: boolean;
+  tags?: string[];
+  status?: 'published' | 'draft' | 'archived';
   createdAt?: any;
+  updatedAt?: any;
 }
 
 export interface NewsEvent {
@@ -63,6 +100,8 @@ export type UserRole = 'superadmin' | 'editor' | 'author' | 'event_manager' | 'c
 export type DashboardTab = 
   | 'create' 
   | 'manage' 
+  | 'create-contributor'
+  | 'manage-contributors'
   | 'create-event' 
   | 'manage-events' 
   | 'create-expert' 
@@ -75,7 +114,7 @@ export type DashboardTab =
 export interface DashboardTabOption {
   id: DashboardTab;
   label: string;
-  category: 'Editorial' | 'Events' | 'Experts' | 'Spotlights' | 'System';
+  category: 'Editorial' | 'Contributors' | 'Events' | 'Experts' | 'Spotlights' | 'System';
   description: string;
 }
 
@@ -92,3 +131,4 @@ export interface DashboardUser {
   lastLoginAt?: string;
   createdBy?: string;
 }
+

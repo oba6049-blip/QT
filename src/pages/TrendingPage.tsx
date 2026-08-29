@@ -39,7 +39,7 @@ export default function TrendingPage() {
               Trending Now<span className="text-brand-accent">.</span>
             </h1>
             <p className="text-xl text-slate-500 max-w-2xl leading-relaxed">
-              The stories currently dominating the conversation across the global Quotients Africa network.
+              The stories currently dominating the conversation across the global TechQuo News network.
             </p>
           </header>
 
