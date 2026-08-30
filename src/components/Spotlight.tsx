@@ -10,6 +10,11 @@ export default function Spotlight() {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  const getCleanSnippet = (content: string) => {
+    if (!content) return '';
+    return content.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+  };
+
   useEffect(() => {
     const fetchStories = async () => {
       const data = await getSpotlightStories();
@@ -79,7 +84,7 @@ export default function Spotlight() {
                     {story.title}
                   </h3>
                   <p className="text-slate-600 leading-relaxed italic font-serif mb-8 line-clamp-4">
-                    "{story.story}"
+                    "{getCleanSnippet(story.story)}"
                   </p>
                 </div>
                 

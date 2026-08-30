@@ -19,6 +19,7 @@ import ManageContributorsTab from "../components/ManageContributorsTab";
 import ContributorSelect from "../components/ContributorSelect";
 import ArticleDatePicker from "../components/ArticleDatePicker";
 import EditArticleModal from "../components/EditArticleModal";
+import EditSpotlightModal from "../components/EditSpotlightModal";
 
 export default function AdminDashboard() {
   const { user } = useAuth();
@@ -37,6 +38,7 @@ export default function AdminDashboard() {
   const [events, setEvents] = useState<NewsEvent[]>([]);
   const [experts, setExperts] = useState<Expert[]>([]);
   const [spotlights, setSpotlights] = useState<SpotlightStory[]>([]);
+  const [editingSpotlight, setEditingSpotlight] = useState<SpotlightStory | null>(null);
   const [view, setView] = useState<DashboardTab>('create');
   const [changePasswordModalOpen, setChangePasswordModalOpen] = useState(false);
 
@@ -1666,14 +1668,17 @@ export default function AdminDashboard() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="editorial-label">Founder's Story / Summary</label>
-                  <textarea 
-                    required
-                    rows={6}
-                    className="w-full p-4 bg-slate-50 border border-slate-200 outline-hidden focus:border-brand-accent"
-                    placeholder="The narrative of their journey..."
-                    value={spotlightFormData.story}
-                    onChange={e => setSpotlightFormData({...spotlightFormData, story: e.target.value})}
+                  <label className="editorial-label flex items-center justify-between">
+                    <span>Founder's Narrative Story (Rich Text)</span>
+                    <span className="text-[10px] text-slate-500 font-normal uppercase tracking-wider flex items-center gap-1">
+                      <Sparkles size={12} className="text-brand-accent" />
+                      Full Rich Text Formatting
+                    </span>
+                  </label>
+                  <RichTextEditor 
+                    content={spotlightFormData.story} 
+                    onChange={story => setSpotlightFormData({...spotlightFormData, story})} 
+                    placeholder="The narrative of their journey... Format with bold, italics, quotes, lists, headings, and links."
                   />
                 </div>
 
@@ -1705,13 +1710,23 @@ export default function AdminDashboard() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {spotlights.map(story => (
-                  <div key={story.id} className="border border-slate-100 hover:border-brand-accent/30 transition-all flex flex-col relative group">
-                    <button 
-                      onClick={() => setSpotlightToDelete(story.id)}
-                      className="absolute top-4 right-4 z-10 bg-white/80 p-2 rounded-full text-slate-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
-                    >
-                      <Trash2 size={16} />
-                    </button>
+                  <div key={story.id} className="border border-slate-100 hover:border-brand-accent/30 transition-all flex flex-col relative group bg-white">
+                    <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button 
+                        onClick={() => setEditingSpotlight(story)}
+                        title="Edit Founder Spotlight"
+                        className="bg-white/90 backdrop-blur-xs p-2 rounded-full text-slate-600 hover:text-black hover:bg-slate-100 shadow-sm transition-colors"
+                      >
+                        <Edit3 size={15} />
+                      </button>
+                      <button 
+                        onClick={() => setSpotlightToDelete(story.id)}
+                        title="Delete Spotlight"
+                        className="bg-white/90 backdrop-blur-xs p-2 rounded-full text-slate-400 hover:text-red-600 hover:bg-red-50 shadow-sm transition-colors"
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    </div>
                     
                     <div className="h-40 overflow-hidden">
                       <img src={story.image} alt={story.founderName} className="w-full h-full object-cover" />
@@ -1720,7 +1735,9 @@ export default function AdminDashboard() {
                     <div className="p-6">
                       <p className="text-[10px] font-bold uppercase tracking-widest text-brand-accent mb-2">{story.companyName}</p>
                       <h3 className="font-editorial font-bold text-xl mb-4 text-slate-900">{story.founderName}</h3>
-                      <p className="text-sm text-slate-500 line-clamp-2">{story.story}</p>
+                      <p className="text-sm text-slate-500 line-clamp-2">
+                        {story.story ? story.story.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() : ''}
+                      </p>
                     </div>
                   </div>
                 ))}
@@ -2319,6 +2336,17 @@ export default function AdminDashboard() {
           nextParams.delete('edit');
           nextParams.delete('articleId');
           setSearchParams(nextParams, { replace: true });
+        }}
+      />
+
+      {/* Edit Spotlight Modal */}
+      <EditSpotlightModal
+        story={editingSpotlight}
+        isOpen={Boolean(editingSpotlight)}
+        onClose={() => setEditingSpotlight(null)}
+        onSuccess={(updated) => {
+          setSpotlights(prev => prev.map(s => s.id === updated.id ? updated : s));
+          setEditingSpotlight(null);
         }}
       />
     </div>

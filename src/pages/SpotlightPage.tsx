@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "motion/react";
 import { ArrowLeft, Quote, Globe, Twitter, Linkedin, Loader2 } from "lucide-react";
+import DOMPurify from "dompurify";
+import ReactMarkdown from "react-markdown";
 import { getSpotlightStoryById } from "../services/spotlightService";
 import { SpotlightStory } from "../types";
 import Navbar from "../components/Navbar";
@@ -127,9 +129,23 @@ export default function SpotlightPage() {
                 <div className="prose prose-slate lg:prose-xl max-w-none">
                   <div className="relative mb-12">
                     <Quote size={60} className="absolute -top-10 -left-10 text-brand-accent/10 -z-10" />
-                    <p className="text-xl md:text-2xl font-serif leading-relaxed text-slate-700 whitespace-pre-wrap">
-                      {story.story}
-                    </p>
+                    {story.story && /<[a-z][\s\S]*>/i.test(story.story) ? (
+                      <div 
+                        className="rich-text-content font-serif text-slate-800 leading-relaxed text-lg md:text-xl space-y-4"
+                        dangerouslySetInnerHTML={{ 
+                          __html: DOMPurify.sanitize(story.story, {
+                            ADD_ATTR: ['target', 'rel', 'style', 'class', 'href', 'title', 'id'],
+                            ADD_TAGS: ['iframe', 'span', 'mark', 'a', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'blockquote', 'hr', 'strong', 'em', 'u', 's', 'code', 'pre', 'div', 'b', 'i']
+                          }) 
+                        }} 
+                      />
+                    ) : (
+                      <div className="markdown-body font-serif text-slate-800 leading-relaxed text-lg md:text-xl whitespace-pre-wrap">
+                        <ReactMarkdown>
+                          {story.story || ""}
+                        </ReactMarkdown>
+                      </div>
+                    )}
                   </div>
                 </div>
 
