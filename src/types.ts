@@ -39,6 +39,8 @@ export interface Article {
   authorImage?: string;
   contributorId?: string;
   contributor?: Contributor;
+  postedBy?: string; // User/Editor ID who created/posted the entry
+  postedByName?: string; // Display name / email of the editor who published
   date: string;
   publishedAt?: string;
   readTime: string;
@@ -79,13 +81,23 @@ export interface Expert {
 
 export interface SpotlightStory {
   id: string;
+  _id?: string;
   founderName: string;
   companyName: string;
   title: string;
   story: string;
   image: string;
   link?: string;
+  author?: string;
+  authorDesignation?: string;
+  authorImage?: string;
+  contributorId?: string;
+  contributor?: Contributor;
+  postedBy?: string; // User ID who submitted/created
+  postedByName?: string; // Display name or email of publisher
+  publishedAt?: string;
   createdAt?: any;
+  updatedAt?: any;
 }
 
 export interface UserProfile {

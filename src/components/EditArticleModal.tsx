@@ -15,7 +15,8 @@ import {
   History, 
   Sparkles,
   Link as LinkIcon,
-  Tag
+  Tag,
+  ShieldCheck
 } from 'lucide-react';
 import RichTextEditor from './RichTextEditor';
 import ContributorSelect from './ContributorSelect';
@@ -384,6 +385,13 @@ export default function EditArticleModal({
                 />
               </div>
             </div>
+
+            {article.postedByName && (
+              <div className="px-3 py-2 bg-slate-50 border border-slate-200/80 rounded text-[11px] text-slate-500 flex items-center gap-1.5">
+                <ShieldCheck size={13} className="text-brand-accent" />
+                <span>Originally posted & published by editor: <strong className="text-slate-700">{article.postedByName}</strong></span>
+              </div>
+            )}
 
             {/* Publication Date & Backdate Picker */}
             <ArticleDatePicker

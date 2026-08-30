@@ -340,7 +340,11 @@ export default function AdminDashboard() {
     title: "",
     story: "",
     image: "",
-    link: ""
+    link: "",
+    author: user?.displayName || "TechQuo Editorial Staff",
+    authorDesignation: "Contributor",
+    contributorId: "",
+    authorImage: "",
   });
 
   if (!user) {
@@ -495,7 +499,9 @@ export default function AdminDashboard() {
       await createArticle({
         ...formData,
         image: imageUrl,
-        authorId: user.uid
+        authorId: user.uid,
+        postedBy: user.uid,
+        postedByName: user.displayName || user.email || 'Editorial Staff'
       } as any);
       setSuccess(true);
       setFormData({
@@ -637,7 +643,13 @@ export default function AdminDashboard() {
 
       await createSpotlightStory({
         ...spotlightFormData,
-        image: imageUrl
+        image: imageUrl,
+        author: spotlightFormData.author.trim() || user.displayName || 'TechQuo Editorial Staff',
+        authorDesignation: spotlightFormData.authorDesignation.trim() || 'Contributor',
+        contributorId: spotlightFormData.contributorId || undefined,
+        authorImage: spotlightFormData.authorImage || undefined,
+        postedBy: user.uid,
+        postedByName: user.displayName || user.email || 'Editorial Staff'
       });
       setSuccess(true);
       setSpotlightFormData({
@@ -646,10 +658,15 @@ export default function AdminDashboard() {
         title: "",
         story: "",
         image: "",
-        link: ""
+        link: "",
+        author: user.displayName || "TechQuo Editorial Staff",
+        authorDesignation: "Contributor",
+        contributorId: "",
+        authorImage: "",
       });
       setImageFile(null);
       setImagePreview(null);
+      fetchSpotlights();
     } catch (err: any) {
       setError(err.message || "Failed to create spotlight story");
     } finally {
@@ -1638,6 +1655,63 @@ export default function AdminDashboard() {
                   />
                 </div>
 
+                {/* Author / Byline & Contributor Selection */}
+                <div className="bg-slate-50 p-6 border border-slate-200 rounded-sm space-y-4">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2">
+                    <UserCheck size={16} className="text-brand-accent" />
+                    Story Author / Byline Attribution
+                  </h4>
+
+                  <ContributorSelect
+                    selectedContributorId={spotlightFormData.contributorId}
+                    authorName={spotlightFormData.author}
+                    onSelect={(c) => {
+                      if (c) {
+                        setSpotlightFormData({
+                          ...spotlightFormData,
+                          author: c.name,
+                          authorDesignation: c.title || 'Contributing Writer',
+                          contributorId: c.id || c._id || '',
+                          authorImage: c.profileImage || c.avatar || '',
+                        });
+                      } else {
+                        setSpotlightFormData({
+                          ...spotlightFormData,
+                          contributorId: '',
+                        });
+                      }
+                    }}
+                    onNavigateCreateContributor={() => setView('create-contributor')}
+                  />
+
+                  <div className="grid md:grid-cols-2 gap-4 pt-2">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold uppercase tracking-wider text-slate-600">
+                        Author Name
+                      </label>
+                      <input
+                        type="text"
+                        className="w-full p-3 bg-white border border-slate-300 rounded-sm outline-hidden focus:border-black text-sm"
+                        placeholder="e.g. Subair Nurudeen"
+                        value={spotlightFormData.author}
+                        onChange={(e) => setSpotlightFormData({ ...spotlightFormData, author: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold uppercase tracking-wider text-slate-600">
+                        Author Designation
+                      </label>
+                      <input
+                        type="text"
+                        className="w-full p-3 bg-white border border-slate-300 rounded-sm outline-hidden focus:border-black text-sm"
+                        placeholder="e.g. Senior Tech Journalist"
+                        value={spotlightFormData.authorDesignation}
+                        onChange={(e) => setSpotlightFormData({ ...spotlightFormData, authorDesignation: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                </div>
+
                 <div className="space-y-2">
                   <label className="editorial-label">Spotlight Visual</label>
                   <div 
@@ -1734,10 +1808,21 @@ export default function AdminDashboard() {
                     
                     <div className="p-6">
                       <p className="text-[10px] font-bold uppercase tracking-widest text-brand-accent mb-2">{story.companyName}</p>
-                      <h3 className="font-editorial font-bold text-xl mb-4 text-slate-900">{story.founderName}</h3>
-                      <p className="text-sm text-slate-500 line-clamp-2">
+                      <h3 className="font-editorial font-bold text-xl mb-3 text-slate-900">{story.founderName}</h3>
+                      <p className="text-sm text-slate-500 line-clamp-2 mb-4">
                         {story.story ? story.story.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() : ''}
                       </p>
+
+                      <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
+                        <span className="font-medium text-slate-700">
+                          By: {story.author || 'Editorial Staff'}
+                        </span>
+                        {story.postedByName && (
+                          <span className="text-slate-400">
+                            Posted by: {story.postedByName}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}

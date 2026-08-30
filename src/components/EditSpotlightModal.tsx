@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { SpotlightStory } from '../types';
+import { SpotlightStory, Contributor } from '../types';
 import { updateSpotlightStory } from '../services/spotlightService';
 import { 
   X, 
@@ -11,9 +11,12 @@ import {
   Loader2, 
   Edit3, 
   Sparkles,
-  Link as LinkIcon
+  Link as LinkIcon,
+  User,
+  ShieldCheck
 } from 'lucide-react';
 import RichTextEditor from './RichTextEditor';
+import ContributorSelect from './ContributorSelect';
 
 interface EditSpotlightModalProps {
   story: SpotlightStory | null;
@@ -42,6 +45,11 @@ export default function EditSpotlightModal({
     story: '',
     image: '',
     link: '',
+    author: '',
+    authorDesignation: 'Contributor',
+    contributorId: '',
+    authorImage: '',
+    postedByName: '',
   });
 
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -56,6 +64,11 @@ export default function EditSpotlightModal({
         story: story.story || '',
         image: story.image || '',
         link: story.link || '',
+        author: story.author || '',
+        authorDesignation: story.authorDesignation || 'Contributor',
+        contributorId: story.contributorId || story.contributor?.id || '',
+        authorImage: story.authorImage || '',
+        postedByName: story.postedByName || '',
       });
       setImageFile(null);
       setImagePreview(story.image || null);
@@ -65,6 +78,23 @@ export default function EditSpotlightModal({
   }, [story, isOpen]);
 
   if (!isOpen || !story) return null;
+
+  const handleContributorSelect = (c: Contributor | null) => {
+    if (c) {
+      setFormData((prev) => ({
+        ...prev,
+        author: c.name,
+        authorDesignation: c.title || 'Contributing Writer',
+        contributorId: c.id || c._id || '',
+        authorImage: c.profileImage || c.avatar || '',
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        contributorId: '',
+      }));
+    }
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -152,12 +182,16 @@ export default function EditSpotlightModal({
       }
 
       const updatedPayload: Partial<SpotlightStory> = {
-        founderName: formData.founderName,
-        companyName: formData.companyName,
-        title: formData.title,
+        founderName: formData.founderName.trim(),
+        companyName: formData.companyName.trim(),
+        title: formData.title.trim(),
         story: formData.story,
         image: finalImageUrl,
-        link: formData.link,
+        link: formData.link.trim(),
+        author: formData.author.trim() || 'TechQuo Editorial Staff',
+        authorDesignation: formData.authorDesignation.trim() || 'Contributor',
+        contributorId: formData.contributorId || undefined,
+        authorImage: formData.authorImage || undefined,
       };
 
       const ok = await updateSpotlightStory(story.id, updatedPayload);
@@ -212,7 +246,7 @@ export default function EditSpotlightModal({
                   Edit Founder Spotlight
                 </h2>
                 <p className="text-xs text-slate-500 font-sans">
-                  Update narrative text, headline, links, and portrait
+                  Update narrative text, headline, author byline, links, and portrait
                 </p>
               </div>
             </div>
@@ -284,6 +318,54 @@ export default function EditSpotlightModal({
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 />
+              </div>
+
+              {/* Author / Byline & Designation */}
+              <div className="bg-slate-50 p-5 border border-slate-200 rounded-sm space-y-4">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2">
+                  <User size={14} className="text-brand-accent" />
+                  Spotlight Story Author / Byline
+                </h4>
+
+                <ContributorSelect
+                  selectedContributorId={formData.contributorId}
+                  authorName={formData.author}
+                  onSelect={handleContributorSelect}
+                />
+
+                <div className="grid md:grid-cols-2 gap-4 pt-2">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold uppercase tracking-wider text-slate-600">
+                      Author / Reporter Display Name
+                    </label>
+                    <input
+                      type="text"
+                      className="w-full p-3 bg-white border border-slate-300 rounded-sm outline-hidden focus:border-black text-sm"
+                      placeholder="e.g. Aisha Bello"
+                      value={formData.author}
+                      onChange={(e) => setFormData({ ...formData, author: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold uppercase tracking-wider text-slate-600">
+                      Author Title / Designation
+                    </label>
+                    <input
+                      type="text"
+                      className="w-full p-3 bg-white border border-slate-300 rounded-sm outline-hidden focus:border-black text-sm"
+                      placeholder="e.g. Senior Tech Correspondent"
+                      value={formData.authorDesignation}
+                      onChange={(e) => setFormData({ ...formData, authorDesignation: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                {story.postedByName && (
+                  <div className="pt-2 text-[11px] text-slate-500 flex items-center gap-1.5 border-t border-slate-200/80">
+                    <ShieldCheck size={12} className="text-slate-400" />
+                    <span>Originally posted by editorial staff member: <strong className="text-slate-700">{story.postedByName}</strong></span>
+                  </div>
+                )}
               </div>
 
               {/* External Feature Link */}

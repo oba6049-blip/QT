@@ -37,6 +37,16 @@ export const getContributorBySlug = async (slug: string): Promise<Contributor | 
   }
 };
 
+export const getContributorById = async (id: string): Promise<Contributor | null> => {
+  try {
+    const contributors = await getContributors('all');
+    return contributors.find((c) => c.id === id || (c as any)._id === id) || null;
+  } catch (error) {
+    console.error("Error fetching contributor by id:", error);
+    return null;
+  }
+};
+
 export const getContributorArticles = async (slug: string): Promise<Article[]> => {
   try {
     const res = await fetch(`/api/contributors/${encodeURIComponent(slug)}/articles`);

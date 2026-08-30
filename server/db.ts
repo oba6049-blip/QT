@@ -190,6 +190,10 @@ class FallbackDatabase {
         story: "How Ngozi Adeleke is architecting frictionless financial infrastructure connecting over 20 African currencies with global enterprise treasury desks.",
         image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=800",
         link: "https://korapay.com",
+        author: "Nurudeen Subair",
+        authorDesignation: "Editor-in-Chief",
+        postedBy: "user_root_admin",
+        postedByName: "Nurudeen Subair",
         createdAt: new Date().toISOString(),
       },
       {
@@ -201,6 +205,10 @@ class FallbackDatabase {
         story: "Deploying AI-monitored solar storage grids across Sub-Saharan manufacturing hubs to cut industrial power costs by over 45%.",
         image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=800",
         link: "https://heliogrid.energy",
+        author: "Hafsat Itanola",
+        authorDesignation: "FinTech & Wealth Columnist",
+        postedBy: "user_root_admin",
+        postedByName: "Nurudeen Subair",
         createdAt: new Date().toISOString(),
       }
     ];

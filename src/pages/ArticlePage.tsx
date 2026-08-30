@@ -230,9 +230,19 @@ export default function ArticlePage() {
                     {article.author}
                     <UserCheck size={14} className="text-emerald-600" />
                   </p>
-                  <p className="text-xs text-slate-500 flex items-center gap-1.5 mt-0.5">
+                  <p className="text-xs text-slate-500 flex items-center flex-wrap gap-1.5 mt-0.5">
                     <Calendar size={12} />
-                    {article.date} • <span className="font-medium">{authorTitle}</span>
+                    <span>{article.date}</span>
+                    <span>•</span>
+                    <span className="font-medium">{authorTitle}</span>
+                    {article.postedByName && (
+                      <>
+                        <span>•</span>
+                        <span className="text-slate-400">
+                          Posted by <strong className="text-slate-600 font-medium">{article.postedByName}</strong>
+                        </span>
+                      </>
+                    )}
                   </p>
                 </div>
               </Link>

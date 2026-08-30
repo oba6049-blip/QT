@@ -1,30 +1,59 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "motion/react";
-import { ArrowLeft, Quote, Globe, Twitter, Linkedin, Loader2 } from "lucide-react";
+import { 
+  ArrowLeft, 
+  Quote, 
+  Globe, 
+  Twitter, 
+  Linkedin, 
+  UserCheck, 
+  Calendar, 
+  ShieldCheck, 
+  Share2, 
+  Check, 
+  User 
+} from "lucide-react";
 import DOMPurify from "dompurify";
 import ReactMarkdown from "react-markdown";
 import { getSpotlightStoryById } from "../services/spotlightService";
-import { SpotlightStory } from "../types";
+import { getContributorById } from "../services/contributorService";
+import { SpotlightStory, Contributor } from "../types";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
 export default function SpotlightPage() {
   const { id } = useParams<{ id: string }>();
   const [story, setStory] = useState<SpotlightStory | null>(null);
+  const [contributor, setContributor] = useState<Contributor | null>(null);
   const [loading, setLoading] = useState(true);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const fetchStory = async () => {
       if (id) {
         const data = await getSpotlightStoryById(id);
         setStory(data);
+        if (data?.contributorId) {
+          try {
+            const c = await getContributorById(data.contributorId);
+            setContributor(c);
+          } catch {
+            // fallback
+          }
+        }
       }
       setLoading(false);
     };
     fetchStory();
     window.scrollTo(0, 0);
   }, [id]);
+
+  const handleShare = () => {
+    navigator.clipboard.writeText(window.location.href);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   if (loading) {
     return (
@@ -55,6 +84,16 @@ export default function SpotlightPage() {
       </div>
     );
   }
+
+  const authorName = story.author || contributor?.name || "TechQuo Editorial Staff";
+  const authorTitle = story.authorDesignation || contributor?.title || "Staff Reporter";
+  const authorAvatar = contributor?.profileImage || contributor?.avatar || story.authorImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(authorName)}&background=000&color=fff`;
+  const authorSlug = contributor?.slug || authorName.toLowerCase().trim().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-');
+  const authorProfileLink = `/contributors/${authorSlug}`;
+
+  const formattedDate = story.publishedAt || story.createdAt 
+    ? new Date(story.publishedAt || story.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+    : 'Recent Feature';
 
   return (
     <div className="min-h-screen bg-white">
@@ -92,19 +131,52 @@ export default function SpotlightPage() {
                   </div>
                 </motion.div>
 
-                <div className="mt-16 space-y-6">
+                {/* Author / Reporter Spotlight Box */}
+                <div className="mt-16 bg-slate-50 border border-slate-100 p-6 rounded-2xl">
+                  <span className="editorial-label text-slate-400 block mb-3 text-[10px]">Reported & Written By</span>
+                  <Link 
+                    to={authorProfileLink}
+                    className="flex items-center gap-3.5 group/author mb-3"
+                  >
+                    <div className="w-12 h-12 rounded-full overflow-hidden border border-slate-200 shrink-0 group-hover/author:ring-2 group-hover/author:ring-brand-accent transition-all">
+                      <img 
+                        src={authorAvatar} 
+                        alt={authorName} 
+                        className="w-full h-full object-cover"
+                        referrerPolicy="no-referrer"
+                      />
+                    </div>
+                    <div>
+                      <p className="font-bold text-sm text-slate-900 group-hover/author:text-brand-accent transition-colors flex items-center gap-1.5">
+                        {authorName}
+                        <UserCheck size={13} className="text-emerald-600" />
+                      </p>
+                      <p className="text-xs text-slate-500">{authorTitle}</p>
+                    </div>
+                  </Link>
+
+                  {story.postedByName && (
+                    <div className="pt-3 border-t border-slate-200/60 text-[11px] text-slate-500 flex items-center gap-1.5">
+                      <ShieldCheck size={13} className="text-brand-accent shrink-0" />
+                      <span>Published by: <strong className="text-slate-700">{story.postedByName}</strong></span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="mt-8 space-y-6">
                    <h3 className="editorial-label text-brand-accent tracking-[0.3em] border-b border-slate-100 pb-4">Connect</h3>
                    <div className="flex gap-4">
                      {story.link && (
-                       <a href={story.link} target="_blank" rel="noopener noreferrer" className="w-12 h-12 rounded-full border border-slate-100 flex items-center justify-center text-slate-400 hover:bg-black hover:text-white hover:border-black transition-all">
+                       <a href={story.link} target="_blank" rel="noopener noreferrer" className="w-12 h-12 rounded-full border border-slate-100 flex items-center justify-center text-slate-400 hover:bg-black hover:text-white hover:border-black transition-all" title="Visit Website">
                          <Globe size={20} />
                        </a>
                      )}
-                     <button className="w-12 h-12 rounded-full border border-slate-100 flex items-center justify-center text-slate-400 hover:bg-[#1DA1F2] hover:text-white hover:border-[#1DA1F2] transition-all">
-                       <Twitter size={20} />
-                     </button>
-                     <button className="w-12 h-12 rounded-full border border-slate-100 flex items-center justify-center text-slate-400 hover:bg-[#0077B5] hover:text-white hover:border-[#0077B5] transition-all">
-                       <Linkedin size={20} />
+                     <button 
+                       onClick={handleShare}
+                       className="w-12 h-12 rounded-full border border-slate-100 flex items-center justify-center text-slate-400 hover:bg-black hover:text-white hover:border-black transition-all relative"
+                       title="Share Spotlight Story"
+                     >
+                       {copied ? <Check size={18} className="text-emerald-500" /> : <Share2 size={18} />}
                      </button>
                    </div>
                 </div>
@@ -117,14 +189,53 @@ export default function SpotlightPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
               >
-                <span className="editorial-label text-brand-accent tracking-[0.3em] block mb-4 uppercase">Founder Spotlight</span>
-                <h1 className="text-5xl md:text-7xl font-editorial font-bold text-slate-900 mb-8 leading-tight">
+                <div className="flex flex-wrap items-center gap-3 mb-4">
+                  <span className="editorial-label text-brand-accent tracking-[0.3em] uppercase">Founder Spotlight</span>
+                  <span className="text-slate-300">•</span>
+                  <span className="text-xs text-slate-400 flex items-center gap-1">
+                    <Calendar size={12} />
+                    {formattedDate}
+                  </span>
+                </div>
+
+                <h1 className="text-5xl md:text-7xl font-editorial font-bold text-slate-900 mb-6 leading-tight">
                   {story.founderName}
                 </h1>
                 
-                <h2 className="text-2xl md:text-3xl font-editorial font-bold text-brand-accent mb-12 italic border-l-4 border-brand-accent pl-8 py-2">
+                <h2 className="text-2xl md:text-3xl font-editorial font-bold text-brand-accent mb-8 italic border-l-4 border-brand-accent pl-8 py-2">
                   "{story.title}"
                 </h2>
+
+                {/* Inline Byline Header */}
+                <div className="flex flex-wrap items-center justify-between py-4 mb-8 border-y border-slate-100 gap-4">
+                  <Link 
+                    to={authorProfileLink}
+                    className="flex items-center gap-3 group/inline"
+                  >
+                    <div className="w-10 h-10 rounded-full overflow-hidden border border-slate-200 shrink-0 group-hover/inline:ring-2 group-hover/inline:ring-brand-accent transition-all">
+                      <img 
+                        src={authorAvatar} 
+                        alt={authorName} 
+                        className="w-full h-full object-cover"
+                        referrerPolicy="no-referrer"
+                      />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-slate-900 group-hover/inline:text-brand-accent transition-colors flex items-center gap-1.5">
+                        <span>By {authorName}</span>
+                        <UserCheck size={13} className="text-emerald-600" />
+                      </p>
+                      <p className="text-xs text-slate-500">{authorTitle}</p>
+                    </div>
+                  </Link>
+
+                  {story.postedByName && (
+                    <div className="text-xs text-slate-400 flex items-center gap-1.5 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-100">
+                      <ShieldCheck size={13} className="text-slate-500" />
+                      <span>Posted by <strong className="text-slate-700 font-medium">{story.postedByName}</strong></span>
+                    </div>
+                  )}
+                </div>
 
                 <div className="prose prose-slate lg:prose-xl max-w-none">
                   <div className="relative mb-12">
