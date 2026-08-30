@@ -1173,7 +1173,7 @@ export default function AdminDashboard() {
                     <label className="editorial-label">Featured Image</label>
                     <div 
                       onClick={() => fileInputRef.current?.click()}
-                      className="w-full h-48 bg-slate-50 border-2 border-dashed border-slate-200 flex flex-col items-center justify-center cursor-pointer hover:border-brand-accent transition-colors relative overflow-hidden"
+                      className="w-full h-48 bg-slate-50 border-2 border-dashed border-slate-200 flex flex-col items-center justify-center cursor-pointer hover:border-brand-accent transition-colors relative overflow-hidden rounded-md"
                     >
                       {imagePreview ? (
                         <>

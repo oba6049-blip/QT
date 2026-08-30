@@ -67,7 +67,7 @@ export default function Events() {
                       {event.type || 'Event'}
                      </span>
                     {event.image && (
-                      <div className="w-20 h-20 overflow-hidden border border-white/10 mt-2">
+                      <div className="w-20 h-20 overflow-hidden border border-white/10 mt-2 rounded-md">
                         <img 
                           src={event.image} 
                           alt={event.title} 

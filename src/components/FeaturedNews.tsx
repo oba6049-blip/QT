@@ -27,7 +27,7 @@ export default function FeaturedNews() {
           <div className="h-10 w-48 bg-slate-100 mb-4" />
           <div className="h-4 w-96 bg-slate-50 mb-16" />
           <div className="grid lg:grid-cols-12 gap-12">
-            <div className="lg:col-span-8 bg-slate-50 aspect-16/9" />
+            <div className="lg:col-span-8 bg-slate-50 aspect-16/9 rounded-md" />
             <div className="lg:col-span-4 space-y-8">
               {[1, 2, 3].map(i => <div key={i} className="h-24 bg-slate-50" />)}
             </div>
@@ -72,7 +72,7 @@ export default function FeaturedNews() {
                   className="lg:col-span-8 group cursor-pointer"
                 >
                   <Link to={`/${catSlug}/${artSlug}`} className="block border-none outline-none group">
-                    <div className="relative overflow-hidden mb-8 border border-slate-100">
+                    <div className="relative overflow-hidden mb-8 border border-slate-100 rounded-md">
                       <img 
                         src={featured.image} 
                         alt={featured.title} 
@@ -83,7 +83,7 @@ export default function FeaturedNews() {
                         }}
                       />
                       <div className="absolute top-6 left-6">
-                        <span className="bg-black text-white px-3 py-1 text-[10px] font-bold uppercase tracking-widest">{featured.category}</span>
+                        <span className="bg-black text-white px-3 py-1 text-[10px] font-bold uppercase tracking-widest rounded-xs">{featured.category}</span>
                       </div>
                     </div>
                     <div className="flex items-center gap-4 mb-4">

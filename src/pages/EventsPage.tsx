@@ -62,7 +62,7 @@ export default function EventsPage() {
                 >
                   <div className="lg:col-span-8 flex flex-col md:flex-row gap-8">
                     {event.image && (
-                      <div className="w-full md:w-64 h-48 flex-shrink-0 overflow-hidden border border-slate-200">
+                      <div className="w-full md:w-64 h-48 flex-shrink-0 overflow-hidden border border-slate-200 rounded-md">
                         <img 
                           src={event.image} 
                           alt={event.title} 

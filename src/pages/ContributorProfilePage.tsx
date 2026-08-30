@@ -433,7 +433,7 @@ export default function ContributorProfilePage() {
                         {article.image && (
                           <Link
                             to={`/article/${articleId}`}
-                            className="sm:w-48 sm:h-32 h-48 w-full shrink-0 overflow-hidden rounded-xs bg-slate-100 relative block"
+                            className="sm:w-48 sm:h-32 h-48 w-full shrink-0 overflow-hidden rounded-md bg-slate-100 relative block"
                           >
                             <img
                               src={article.image}
@@ -442,7 +442,7 @@ export default function ContributorProfilePage() {
                               referrerPolicy="no-referrer"
                             />
                             {article.category && (
-                              <span className="absolute top-2 left-2 bg-black/80 backdrop-blur-xs text-white text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-2xs">
+                              <span className="absolute top-2 left-2 bg-black/80 backdrop-blur-xs text-white text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-xs">
                                 {article.category}
                               </span>
                             )}

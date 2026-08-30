@@ -67,7 +67,7 @@ export default function TrendingPage() {
                       {String(idx + 1).padStart(2, '0')}
                     </div>
 
-                    <div className="md:w-1/3 aspect-16/9 md:aspect-4/3 overflow-hidden bg-slate-100 shrink-0">
+                    <div className="md:w-1/3 aspect-16/9 md:aspect-4/3 overflow-hidden bg-slate-100 shrink-0 rounded-md">
                       <img 
                         src={article.image} 
                         alt={article.title} 

@@ -71,9 +71,9 @@ export default function CategoryPage() {
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-12 animate-pulse">
               {[1, 2, 3, 4, 5, 6].map(i => (
                 <div key={i} className="space-y-4">
-                  <div className="bg-slate-50 aspect-video" />
-                  <div className="h-6 bg-slate-50 w-3/4" />
-                  <div className="h-4 bg-slate-50 w-1/2" />
+                  <div className="bg-slate-50 aspect-video rounded-md" />
+                  <div className="h-6 bg-slate-50 w-3/4 rounded" />
+                  <div className="h-4 bg-slate-50 w-1/2 rounded" />
                 </div>
               ))}
             </div>
@@ -97,7 +97,7 @@ export default function CategoryPage() {
                     transition={{ delay: idx * 0.1 }}
                     className="group cursor-pointer"
                   >
-                    <div className="overflow-hidden mb-6 border border-slate-50 aspect-16/9 bg-slate-100">
+                    <div className="overflow-hidden mb-6 border border-slate-50 aspect-16/9 bg-slate-100 rounded-md">
                       <img 
                         src={article.image} 
                         alt={article.title} 

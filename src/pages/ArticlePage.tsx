@@ -77,7 +77,7 @@ export default function ArticlePage() {
           <div className="h-4 w-24 bg-slate-100 mb-8" />
           <div className="h-16 w-3/4 bg-slate-100 mb-6" />
           <div className="h-6 w-full bg-slate-50 mb-12" />
-          <div className="aspect-16/9 bg-slate-100 mb-12" />
+          <div className="aspect-16/9 bg-slate-100 mb-12 rounded-md" />
           <div className="space-y-4">
             <div className="h-4 w-full bg-slate-50" />
             <div className="h-4 w-full bg-slate-50" />

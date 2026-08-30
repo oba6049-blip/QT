@@ -418,7 +418,7 @@ export default function EditArticleModal({
                 <label className="editorial-label">Featured Story Image</label>
                 <div
                   onClick={() => fileInputRef.current?.click()}
-                  className="w-full h-44 bg-slate-50 border-2 border-dashed border-slate-300 flex flex-col items-center justify-center cursor-pointer hover:border-black transition-colors relative overflow-hidden group"
+                  className="w-full h-44 bg-slate-50 border-2 border-dashed border-slate-300 flex flex-col items-center justify-center cursor-pointer hover:border-black transition-colors relative overflow-hidden group rounded-md"
                 >
                   {imagePreview ? (
                     <>
