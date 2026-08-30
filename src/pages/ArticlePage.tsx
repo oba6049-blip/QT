@@ -18,14 +18,17 @@ import {
   Globe, 
   Mail, 
   ArrowRight,
-  Sparkles
+  Sparkles,
+  Edit3
 } from "lucide-react";
 import { getArticleById } from "../services/articleService";
 import { Article } from "../types";
+import { useAuth } from "../lib/AuthContext";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
 export default function ArticlePage() {
+  const { user } = useAuth();
   const { id, category: routeCategory, slug } = useParams<{ id?: string; category?: string; slug?: string }>();
   const [article, setArticle] = useState<Article | null>(null);
   const [loading, setLoading] = useState(true);
@@ -235,6 +238,16 @@ export default function ArticlePage() {
               </Link>
 
               <div className="flex items-center gap-3">
+                {user && (
+                  <Link
+                    to={`/admin?edit=${article.id || (article as any)._id}`}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-black text-white hover:bg-brand-accent transition-colors rounded-full text-xs font-bold uppercase tracking-wider"
+                    title="Edit this article in Admin Dashboard"
+                  >
+                    <Edit3 size={14} />
+                    <span className="hidden sm:inline">Edit Story</span>
+                  </Link>
+                )}
                 <button 
                   onClick={handleShare}
                   className="p-3 border border-slate-200 text-slate-400 hover:text-brand-accent hover:border-brand-accent transition-all rounded-full flex items-center gap-2 relative group"
@@ -267,10 +280,15 @@ export default function ArticlePage() {
           </div>
 
           <div className="prose prose-slate lg:prose-xl max-w-none font-serif leading-loose text-slate-800">
-            {article.content?.startsWith('<') ? (
+            {article.content && /<[a-z][\s\S]*>/i.test(article.content) ? (
               <div 
                 className="rich-text-content"
-                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(article.content) }} 
+                dangerouslySetInnerHTML={{ 
+                  __html: DOMPurify.sanitize(article.content, {
+                    ADD_ATTR: ['target', 'rel', 'style', 'class', 'href', 'title', 'id'],
+                    ADD_TAGS: ['iframe', 'span', 'mark', 'a', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'blockquote', 'hr', 'strong', 'em', 'u', 's', 'code', 'pre', 'div', 'b', 'i']
+                  }) 
+                }} 
               />
             ) : (
               <div className="markdown-body">

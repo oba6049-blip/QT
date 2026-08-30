@@ -7,8 +7,8 @@ import { getEvents, createEvent, deleteEvent } from "../services/eventService";
 import { getExperts, createExpert, deleteExpert } from "../services/expertService";
 import { getSpotlightStories, createSpotlightStory, deleteSpotlightStory } from "../services/spotlightService";
 import { Article, NewsEvent, Expert, SpotlightStory, DashboardTab } from "../types";
-import { LayoutDashboard, FilePlus, LogOut, CheckCircle, AlertCircle, ArrowLeft, Upload, Image as ImageIcon, Loader2, Trash2, Calendar, Users, Twitter, Linkedin, ExternalLink, Sparkles, Database, RefreshCw, Server, Cloud, HardDrive, Key, Lock, Settings, Check, HelpCircle, ShieldAlert, FolderSync, ShieldCheck, UserCheck } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { LayoutDashboard, FilePlus, LogOut, CheckCircle, AlertCircle, ArrowLeft, Upload, Image as ImageIcon, Loader2, Trash2, Calendar, Users, Twitter, Linkedin, ExternalLink, Sparkles, Database, RefreshCw, Server, Cloud, HardDrive, Key, Lock, Settings, Check, HelpCircle, ShieldAlert, FolderSync, ShieldCheck, UserCheck, Edit3, Edit, History, Tag, Eye } from "lucide-react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { logout, hasAccessToTab, isSuperAdmin } from "../lib/auth";
 
 import RichTextEditor from "../components/RichTextEditor";
@@ -17,10 +17,13 @@ import ChangePasswordModal from "../components/ChangePasswordModal";
 import CreateContributorTab from "../components/CreateContributorTab";
 import ManageContributorsTab from "../components/ManageContributorsTab";
 import ContributorSelect from "../components/ContributorSelect";
+import ArticleDatePicker from "../components/ArticleDatePicker";
+import EditArticleModal from "../components/EditArticleModal";
 
 export default function AdminDashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -30,6 +33,7 @@ export default function AdminDashboard() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [articles, setArticles] = useState<Article[]>([]);
+  const [editingArticle, setEditingArticle] = useState<Article | null>(null);
   const [events, setEvents] = useState<NewsEvent[]>([]);
   const [experts, setExperts] = useState<Expert[]>([]);
   const [spotlights, setSpotlights] = useState<SpotlightStory[]>([]);
@@ -52,6 +56,26 @@ export default function AdminDashboard() {
       }
     }
   }, [user, view]);
+
+  // Deep linking for editing article via query params: ?edit=article_id
+  useEffect(() => {
+    const editId = searchParams.get('edit') || searchParams.get('articleId');
+    if (editId) {
+      const match = articles.find(a => a.id === editId || (a as any)._id === editId || a.slug === editId);
+      if (match) {
+        setEditingArticle(match);
+      } else {
+        fetch(`/api/articles/${editId}`)
+          .then(res => (res.ok ? res.json() : null))
+          .then(data => {
+            if (data && data.title) {
+              setEditingArticle(data);
+            }
+          })
+          .catch(() => {});
+      }
+    }
+  }, [searchParams, articles]);
   
   // Storage settings state
   const [s3BucketInput, setS3BucketInput] = useState("");
@@ -280,6 +304,7 @@ export default function AdminDashboard() {
     contributorId: "",
     authorImage: "",
     date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+    publishedAt: new Date().toISOString(),
     readTime: "5 min",
     image: "",
     featured: false,
@@ -478,10 +503,13 @@ export default function AdminDashboard() {
         authorDesignation: "Contributor",
         image: "",
         content: "",
-        featured: false
+        featured: false,
+        date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+        publishedAt: new Date().toISOString(),
       });
       setImageFile(null);
       setImagePreview(null);
+      fetchArticles();
     } catch (err: any) {
       setError(err.message || "Failed to create article");
     } finally {
@@ -1125,6 +1153,20 @@ export default function AdminDashboard() {
                     onChange={e => setFormData({...formData, excerpt: e.target.value})}
                   />
                 </div>
+
+                {/* Article Publication Date & Backdating */}
+                <ArticleDatePicker
+                  date={formData.date}
+                  publishedAt={formData.publishedAt}
+                  onChange={({ date, publishedAt }) => {
+                    setFormData({
+                      ...formData,
+                      date,
+                      publishedAt,
+                    });
+                  }}
+                  label="Article Publication Date & Backdating"
+                />
 
                 <div className="grid md:grid-cols-2 gap-8">
                   <div className="space-y-2">
@@ -2035,9 +2077,23 @@ export default function AdminDashboard() {
         ) : view === 'manage' ? (
           <section className="max-w-5xl">
              <div className="bg-white border border-slate-200 p-8 md:p-12">
-               <h2 className="text-2xl font-editorial font-bold mb-8 flex items-center gap-3 underline decoration-brand-accent underline-offset-8 text-black">
-                Manage Circulation
-              </h2>
+               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 pb-6 border-b border-slate-100">
+                 <div>
+                   <h2 className="text-2xl font-editorial font-bold flex items-center gap-3 underline decoration-brand-accent underline-offset-8 text-black">
+                    Manage Circulation
+                   </h2>
+                   <p className="text-slate-500 text-sm mt-1">
+                     Review, update published stories, modify bylines, backdate publication dates, or cease circulation.
+                   </p>
+                 </div>
+                 <button
+                   onClick={fetchArticles}
+                   className="inline-flex items-center gap-2 px-3 py-2 border border-slate-200 text-xs font-bold uppercase tracking-wider text-slate-700 hover:bg-slate-50 transition-colors"
+                 >
+                   <RefreshCw size={13} />
+                   Refresh Feed
+                 </button>
+               </div>
 
               <div className="overflow-x-auto">
                 <table className="w-full text-left">
@@ -2049,34 +2105,98 @@ export default function AdminDashboard() {
                       <th className="pb-4 font-normal text-right">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-50">
-                    {articles.map(article => (
-                      <tr key={article.id} className="group transition-colors hover:bg-slate-50/50">
-                        <td className="py-6 pr-6">
-                          <span className="font-serif font-bold text-slate-900 line-clamp-1">{article.title}</span>
-                        </td>
-                        <td className="py-6">
-                           <span className="text-[10px] uppercase font-bold tracking-widest text-slate-400 bg-slate-50 px-2 py-1 rounded">{article.category}</span>
-                        </td>
-                        <td className="py-6">
-                           <span className="text-xs text-slate-500 font-mono tracking-tight">{article.date}</span>
-                        </td>
-                        <td className="py-6 text-right">
-                          <button 
-                            disabled={deletingIds.includes(article.id)}
-                            onClick={() => setArticleToDelete(article.id)}
-                            className="p-2 text-slate-300 hover:text-red-500 transition-colors disabled:opacity-50"
-                            title="Delete Article"
-                          >
-                            {deletingIds.includes(article.id) ? (
-                              <Loader2 className="animate-spin" size={18} />
-                            ) : (
-                              <Trash2 size={18} />
-                            )}
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
+                  <tbody className="divide-y divide-slate-100">
+                    {articles.map(article => {
+                      const categorySlug = (article.category || 'technology').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+                      const articleSlug = article.slug || article.id;
+                      const liveUrl = `/${categorySlug}/${articleSlug}`;
+                      const isBackdated = article.publishedAt && new Date(article.publishedAt) < new Date(new Date().toDateString());
+
+                      return (
+                        <tr key={article.id} className="group transition-colors hover:bg-slate-50/70">
+                          <td className="py-5 pr-6">
+                            <div className="flex items-center gap-3">
+                              {article.image && (
+                                <img
+                                  src={article.image}
+                                  alt={article.title}
+                                  className="w-12 h-10 object-cover rounded shrink-0 border border-slate-200 hidden sm:block"
+                                  referrerPolicy="no-referrer"
+                                />
+                              )}
+                              <div className="min-w-0">
+                                <button
+                                  onClick={() => setEditingArticle(article)}
+                                  className="text-left font-serif font-bold text-slate-900 line-clamp-1 hover:text-brand-accent transition-colors block"
+                                  title="Click to edit story"
+                                >
+                                  {article.title}
+                                </button>
+                                <span className="text-[11px] text-slate-400 block truncate">
+                                  by <strong className="text-slate-600">{article.author || 'Staff'}</strong>
+                                  {article.featured && <span className="ml-2 text-brand-accent font-bold">★ Hero Featured</span>}
+                                </span>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="py-5">
+                             <span className="text-[10px] uppercase font-bold tracking-widest text-slate-600 bg-slate-100 px-2.5 py-1 rounded">
+                               {article.category}
+                             </span>
+                          </td>
+                          <td className="py-5">
+                            <div className="flex flex-col">
+                              <span className="text-xs text-slate-700 font-mono tracking-tight flex items-center gap-1">
+                                <Calendar size={12} className="text-slate-400" />
+                                {article.date}
+                              </span>
+                              {isBackdated && (
+                                <span className="text-[9px] text-amber-700 font-mono flex items-center gap-0.5 mt-0.5">
+                                  <History size={10} /> Backdated
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="py-5 text-right">
+                            <div className="flex items-center justify-end gap-1">
+                              {/* Edit Published Article Button */}
+                              <button 
+                                onClick={() => setEditingArticle(article)}
+                                className="p-2 text-slate-600 hover:text-brand-accent hover:bg-slate-100 transition-all rounded"
+                                title="Edit Published Story"
+                              >
+                                <Edit3 size={17} />
+                              </button>
+
+                              {/* View Live Article */}
+                              <a
+                                href={liveUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="p-2 text-slate-400 hover:text-black hover:bg-slate-100 transition-all rounded"
+                                title="View Live Article"
+                              >
+                                <ExternalLink size={17} />
+                              </a>
+
+                              {/* Delete Article */}
+                              <button 
+                                disabled={deletingIds.includes(article.id)}
+                                onClick={() => setArticleToDelete(article.id)}
+                                className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all rounded disabled:opacity-50"
+                                title="Cease Circulation (Delete)"
+                              >
+                                {deletingIds.includes(article.id) ? (
+                                  <Loader2 className="animate-spin text-red-500" size={17} />
+                                ) : (
+                                  <Trash2 size={17} />
+                                )}
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
                 {articles.length === 0 && (
@@ -2179,6 +2299,27 @@ export default function AdminDashboard() {
           setChangePasswordModalOpen(false);
         }}
         onClose={() => setChangePasswordModalOpen(false)}
+      />
+
+      {/* Edit Article Modal */}
+      <EditArticleModal
+        article={editingArticle}
+        isOpen={Boolean(editingArticle)}
+        onClose={() => {
+          setEditingArticle(null);
+          const nextParams = new URLSearchParams(searchParams);
+          nextParams.delete('edit');
+          nextParams.delete('articleId');
+          setSearchParams(nextParams, { replace: true });
+        }}
+        onSuccess={(updated) => {
+          setArticles(prev => prev.map(a => (a.id === updated.id || (a as any)._id === updated.id) ? updated : a));
+          setEditingArticle(null);
+          const nextParams = new URLSearchParams(searchParams);
+          nextParams.delete('edit');
+          nextParams.delete('articleId');
+          setSearchParams(nextParams, { replace: true });
+        }}
       />
     </div>
   );

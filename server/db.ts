@@ -758,7 +758,7 @@ export async function getArticlesFromDb(
         query.tags = { $in: [new RegExp(`^${filter.tag}$`, "i")] };
       }
 
-      let cursor = database.collection("articles").find(query).sort({ createdAt: -1 });
+      let cursor = database.collection("articles").find(query).sort({ publishedAt: -1, createdAt: -1 });
       if (filter.limit) {
         cursor = cursor.limit(filter.limit);
       }
@@ -771,7 +771,7 @@ export async function getArticlesFromDb(
         if (filter.category) {
           fallbackQuery.category = { $regex: new RegExp(`^${filter.category}$`, "i") };
         }
-        let fallbackCursor = database.collection("articles").find(fallbackQuery).sort({ createdAt: -1 });
+        let fallbackCursor = database.collection("articles").find(fallbackQuery).sort({ publishedAt: -1, createdAt: -1 });
         if (filter.limit) {
           fallbackCursor = fallbackCursor.limit(filter.limit);
         } else if (filter.featured) {
@@ -807,6 +807,11 @@ export async function getArticlesFromDb(
         (a) => Array.isArray(a.tags) && a.tags.some((t: string) => t.toLowerCase() === filter.tag!.toLowerCase())
       );
     }
+    results.sort((a, b) => {
+      const timeA = new Date(a.publishedAt || a.date || a.createdAt || 0).getTime();
+      const timeB = new Date(b.publishedAt || b.date || b.createdAt || 0).getTime();
+      return timeB - timeA;
+    });
     if (filter.limit) {
       results = results.slice(0, filter.limit);
     }
@@ -895,6 +900,19 @@ export async function createArticleInDb(data: any) {
     }
   }
 
+  // Handle date and backdating synchronization
+  let dateStr = data.date || new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+  let publishedAt = data.publishedAt;
+  if (!publishedAt && data.date) {
+    const parsed = new Date(data.date);
+    if (!isNaN(parsed.getTime())) {
+      publishedAt = parsed.toISOString();
+    }
+  }
+  if (!publishedAt) {
+    publishedAt = new Date().toISOString();
+  }
+
   const newArticle = {
     ...data,
     slug,
@@ -909,8 +927,9 @@ export async function createArticleInDb(data: any) {
       ? data.tags.split(",").map((t: string) => t.trim()).filter(Boolean)
       : [],
     status: data.status || "published",
-    createdAt: new Date().toISOString(),
-    publishedAt: data.publishedAt || new Date().toISOString(),
+    date: dateStr,
+    createdAt: data.createdAt || publishedAt,
+    publishedAt: publishedAt,
   };
 
   if (database) {
@@ -953,6 +972,18 @@ export async function updateArticleInDb(id: string, data: any) {
   }
   if (typeof updates.tags === "string") {
     updates.tags = updates.tags.split(",").map((t: string) => t.trim()).filter(Boolean);
+  }
+  // Sync date & publishedAt for backdating
+  if (updates.date && !updates.publishedAt) {
+    const parsed = new Date(updates.date);
+    if (!isNaN(parsed.getTime())) {
+      updates.publishedAt = parsed.toISOString();
+    }
+  } else if (updates.publishedAt && !updates.date) {
+    const parsed = new Date(updates.publishedAt);
+    if (!isNaN(parsed.getTime())) {
+      updates.date = parsed.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+    }
   }
   updates.updatedAt = new Date().toISOString();
 
