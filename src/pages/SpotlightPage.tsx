@@ -148,13 +148,6 @@ export default function SpotlightPage() {
                     )}
                   </div>
                 </div>
-
-                <div className="mt-16 p-12 bg-slate-50 border border-slate-100 rounded-2xl">
-                  <h3 className="font-editorial font-bold text-2xl mb-6">About {story.companyName}</h3>
-                  <p className="text-slate-600 font-serif leading-relaxed">
-                    Under the visionary leadership of {story.founderName}, {story.companyName} has emerged as a key player in Africa's industrial and financial landscape. Their journey represents a blueprint for sustainable growth and innovation in the continent's most critical sectors.
-                  </p>
-                </div>
               </motion.div>
             </div>
           </div>
