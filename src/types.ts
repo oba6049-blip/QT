@@ -13,6 +13,7 @@ export interface Contributor {
   profileImage: string;
   avatar?: string;
   title: string;
+  contributorType?: 'staff' | 'guest'; // 'staff' (Staff Contributor / Editorial Staff) or 'guest' (Guest Contributor)
   bio: string;
   longBio?: string;
   email?: string;

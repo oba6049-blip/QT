@@ -65,10 +65,10 @@ export default function EditSpotlightModal({
         image: story.image || '',
         link: story.link || '',
         author: story.author || '',
-        authorDesignation: story.authorDesignation || 'Contributor',
+        authorDesignation: story.authorDesignation || 'Guest Contributor',
         contributorId: story.contributorId || story.contributor?.id || '',
         authorImage: story.authorImage || '',
-        postedByName: story.postedByName || '',
+        postedByName: story.postedByName || 'TechQuo News Editorial Team',
       });
       setImageFile(null);
       setImagePreview(story.image || null);
@@ -360,12 +360,19 @@ export default function EditSpotlightModal({
                   </div>
                 </div>
 
-                {story.postedByName && (
-                  <div className="pt-2 text-[11px] text-slate-500 flex items-center gap-1.5 border-t border-slate-200/80">
-                    <ShieldCheck size={12} className="text-slate-400" />
-                    <span>Originally posted by editorial staff member: <strong className="text-slate-700">{story.postedByName}</strong></span>
-                  </div>
-                )}
+                <div className="space-y-1.5 pt-1">
+                  <label className="text-xs font-bold uppercase tracking-wider text-slate-600 flex items-center justify-between">
+                    <span>Published By (Editorial Desk / Editor)</span>
+                    <span className="text-[10px] text-slate-400 font-normal normal-case">Internal TechQuo editorial team attribution</span>
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full p-3 bg-white border border-slate-300 rounded-sm outline-hidden focus:border-black text-sm"
+                    placeholder="TechQuo News Editorial Team"
+                    value={formData.postedByName || ''}
+                    onChange={(e) => setFormData({ ...formData, postedByName: e.target.value })}
+                  />
+                </div>
               </div>
 
               {/* External Feature Link */}

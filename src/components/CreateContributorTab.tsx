@@ -19,6 +19,8 @@ export default function CreateContributorTab({ onSuccess, onNavigateManage }: Cr
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
   const [isCustomSlug, setIsCustomSlug] = useState(false);
+  const [contributorType, setContributorType] = useState<'staff' | 'guest'>('guest');
+  const [joinedAt, setJoinedAt] = useState<string>(() => new Date().toISOString().split('T')[0]);
   const [title, setTitle] = useState('');
   const [bio, setBio] = useState('');
   const [longBio, setLongBio] = useState('');
@@ -134,7 +136,9 @@ export default function CreateContributorTab({ onSuccess, onNavigateManage }: Cr
       const contributorPayload: Partial<Contributor> = {
         name: name.trim(),
         slug: finalSlug,
+        contributorType,
         title: title.trim(),
+        joinedAt: joinedAt || new Date().toISOString().split('T')[0],
         bio: bio.trim(),
         longBio: longBio.trim() || undefined,
         email: email.trim() || undefined,
@@ -162,6 +166,8 @@ export default function CreateContributorTab({ onSuccess, onNavigateManage }: Cr
       setName('');
       setSlug('');
       setIsCustomSlug(false);
+      setContributorType('guest');
+      setJoinedAt(new Date().toISOString().split('T')[0]);
       setTitle('');
       setBio('');
       setLongBio('');
@@ -299,7 +305,86 @@ export default function CreateContributorTab({ onSuccess, onNavigateManage }: Cr
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Contributor Classification (Staff vs Guest) */}
+          <div className="bg-slate-50 p-4 border border-slate-200 rounded-sm">
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-900 mb-2">
+              Contributor Classification <span className="text-rose-500">*</span>
+            </label>
+            <p className="text-xs text-slate-500 mb-3">
+              Specify whether this author is TechQuo in-house editorial staff or an external guest contributor.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <label
+                onClick={() => {
+                  setContributorType('staff');
+                  if (!title || title === 'Guest Contributor') {
+                    setTitle('Staff Reporter');
+                  }
+                }}
+                className={`p-3.5 border rounded cursor-pointer transition-all flex items-start gap-3 ${
+                  contributorType === 'staff'
+                    ? 'border-indigo-600 bg-indigo-50/50 shadow-2xs ring-1 ring-indigo-600'
+                    : 'border-slate-200 bg-white hover:border-slate-300'
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="contributorType"
+                  value="staff"
+                  checked={contributorType === 'staff'}
+                  onChange={() => {}}
+                  className="mt-0.5 text-indigo-600 focus:ring-indigo-500"
+                />
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-slate-900">Staff Contributor</span>
+                    <span className="px-1.5 py-0.5 bg-indigo-100 text-indigo-800 text-[10px] font-bold rounded">
+                      In-House Staff
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 mt-1 leading-snug">
+                    Full-time newsroom journalists, editors, and regular TechQuo staff reporters.
+                  </p>
+                </div>
+              </label>
+
+              <label
+                onClick={() => {
+                  setContributorType('guest');
+                  if (!title || title === 'Staff Reporter') {
+                    setTitle('Guest Contributor');
+                  }
+                }}
+                className={`p-3.5 border rounded cursor-pointer transition-all flex items-start gap-3 ${
+                  contributorType === 'guest'
+                    ? 'border-amber-600 bg-amber-50/50 shadow-2xs ring-1 ring-amber-600'
+                    : 'border-slate-200 bg-white hover:border-slate-300'
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="contributorType"
+                  value="guest"
+                  checked={contributorType === 'guest'}
+                  onChange={() => {}}
+                  className="mt-0.5 text-amber-600 focus:ring-amber-500"
+                />
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-slate-900">Guest Contributor</span>
+                    <span className="px-1.5 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-bold rounded">
+                      External Writer
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 mt-1 leading-snug">
+                    External industry analysts, guest columnists, thought leaders, and submitted articles.
+                  </p>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
                 Professional Title / Designation <span className="text-rose-500">*</span>
@@ -311,6 +396,19 @@ export default function CreateContributorTab({ onSuccess, onNavigateManage }: Cr
                 placeholder="e.g. Senior Tech Journalist & Policy Analyst"
                 required
                 className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded text-sm focus:outline-none focus:border-black"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2 flex items-center justify-between">
+                <span>Joined Date</span>
+                <span className="text-[10px] text-slate-400 font-normal normal-case">Backdate supported</span>
+              </label>
+              <input
+                type="date"
+                value={joinedAt}
+                onChange={(e) => setJoinedAt(e.target.value)}
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded text-sm focus:outline-none focus:border-black font-medium"
               />
             </div>
 

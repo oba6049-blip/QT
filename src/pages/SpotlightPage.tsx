@@ -86,7 +86,8 @@ export default function SpotlightPage() {
   }
 
   const authorName = story.author || contributor?.name || "TechQuo Editorial Staff";
-  const authorTitle = story.authorDesignation || contributor?.title || "Staff Reporter";
+  const authorTitle = story.authorDesignation || contributor?.title || "Guest Contributor";
+  const publishedByName = story.postedByName || "TechQuo News Editorial Team";
   const authorAvatar = contributor?.profileImage || contributor?.avatar || story.authorImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(authorName)}&background=000&color=fff`;
   const authorSlug = contributor?.slug || authorName.toLowerCase().trim().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-');
   const authorProfileLink = `/contributors/${authorSlug}`;
@@ -132,11 +133,11 @@ export default function SpotlightPage() {
                 </motion.div>
 
                 {/* Author / Reporter Spotlight Box */}
-                <div className="mt-16 bg-slate-50 border border-slate-100 p-6 rounded-2xl">
-                  <span className="editorial-label text-slate-400 block mb-3 text-[10px]">Reported & Written By</span>
+                <div className="mt-16 bg-slate-50 border border-slate-200/80 p-6 rounded-2xl space-y-4">
+                  <span className="editorial-label text-slate-400 block text-[10px]">Reported & Written By</span>
                   <Link 
                     to={authorProfileLink}
-                    className="flex items-center gap-3.5 group/author mb-3"
+                    className="flex items-center gap-3.5 group/author"
                   >
                     <div className="w-12 h-12 rounded-full overflow-hidden border border-slate-200 shrink-0 group-hover/author:ring-2 group-hover/author:ring-brand-accent transition-all">
                       <img 
@@ -155,12 +156,10 @@ export default function SpotlightPage() {
                     </div>
                   </Link>
 
-                  {story.postedByName && (
-                    <div className="pt-3 border-t border-slate-200/60 text-[11px] text-slate-500 flex items-center gap-1.5">
-                      <ShieldCheck size={13} className="text-brand-accent shrink-0" />
-                      <span>Published by: <strong className="text-slate-700">{story.postedByName}</strong></span>
-                    </div>
-                  )}
+                  <div className="pt-3 border-t border-slate-200/80 text-xs text-slate-500 flex items-center gap-1.5">
+                    <ShieldCheck size={14} className="text-brand-accent shrink-0" />
+                    <span>Published by <strong className="font-semibold text-slate-800">{publishedByName}</strong></span>
+                  </div>
                 </div>
 
                 <div className="mt-8 space-y-6">
@@ -207,34 +206,47 @@ export default function SpotlightPage() {
                 </h2>
 
                 {/* Inline Byline Header */}
-                <div className="flex flex-wrap items-center justify-between py-4 mb-8 border-y border-slate-100 gap-4">
-                  <Link 
-                    to={authorProfileLink}
-                    className="flex items-center gap-3 group/inline"
-                  >
-                    <div className="w-10 h-10 rounded-full overflow-hidden border border-slate-200 shrink-0 group-hover/inline:ring-2 group-hover/inline:ring-brand-accent transition-all">
-                      <img 
-                        src={authorAvatar} 
-                        alt={authorName} 
-                        className="w-full h-full object-cover"
-                        referrerPolicy="no-referrer"
-                      />
-                    </div>
-                    <div>
-                      <p className="text-sm font-bold text-slate-900 group-hover/inline:text-brand-accent transition-colors flex items-center gap-1.5">
-                        <span>By {authorName}</span>
-                        <UserCheck size={13} className="text-emerald-600" />
-                      </p>
-                      <p className="text-xs text-slate-500">{authorTitle}</p>
-                    </div>
-                  </Link>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between py-5 mb-8 border-y border-slate-100 gap-4">
+                  <div className="flex items-start sm:items-center gap-4">
+                    <Link 
+                      to={authorProfileLink}
+                      className="shrink-0 group/inline"
+                    >
+                      <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-slate-200 group-hover/inline:border-brand-accent transition-all shadow-xs">
+                        <img 
+                          src={authorAvatar} 
+                          alt={authorName} 
+                          className="w-full h-full object-cover"
+                          referrerPolicy="no-referrer"
+                        />
+                      </div>
+                    </Link>
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-xs uppercase font-bold tracking-wider text-slate-400">By</span>
+                        <Link 
+                          to={authorProfileLink}
+                          className="text-base font-bold text-slate-900 group-hover/inline:text-brand-accent transition-colors flex items-center gap-1.5"
+                        >
+                          <span>{authorName}</span>
+                          <UserCheck size={14} className="text-emerald-600" />
+                        </Link>
+                        <span className="inline-flex items-center text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
+                          {authorTitle}
+                        </span>
+                      </div>
+                      
+                      <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                        <ShieldCheck size={13} className="text-brand-accent shrink-0" />
+                        <span>Published by <strong className="font-semibold text-slate-800">{publishedByName}</strong></span>
+                      </div>
 
-                  {story.postedByName && (
-                    <div className="text-xs text-slate-400 flex items-center gap-1.5 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-100">
-                      <ShieldCheck size={13} className="text-slate-500" />
-                      <span>Posted by <strong className="text-slate-700 font-medium">{story.postedByName}</strong></span>
+                      <div className="flex items-center gap-1.5 text-xs text-slate-400 pt-0.5">
+                        <Calendar size={12} />
+                        <span>{formattedDate}</span>
+                      </div>
                     </div>
-                  )}
+                  </div>
                 </div>
 
                 <div className="prose prose-slate lg:prose-xl max-w-none">

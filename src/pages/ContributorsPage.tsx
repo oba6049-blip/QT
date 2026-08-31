@@ -171,6 +171,17 @@ export default function ContributorsPage() {
                           />
                         </Link>
                         <div className="min-w-0">
+                          <div className="flex items-center gap-1.5 mb-1">
+                            {c.contributorType === 'guest' ? (
+                              <span className="px-1.5 py-0.5 bg-amber-50 text-amber-800 text-[9px] font-bold uppercase tracking-wider rounded border border-amber-200">
+                                Guest Contributor
+                              </span>
+                            ) : (
+                              <span className="px-1.5 py-0.5 bg-indigo-50 text-indigo-800 text-[9px] font-bold uppercase tracking-wider rounded border border-indigo-200">
+                                Staff Contributor
+                              </span>
+                            )}
+                          </div>
                           <h3 className="text-lg font-editorial font-bold text-slate-900 group-hover:text-brand-accent transition-colors leading-snug">
                             <Link to={`/contributors/${slug}`}>{c.name}</Link>
                           </h3>

@@ -51,6 +51,7 @@ export default function EditArticleModal({
     authorDesignation: 'Contributor',
     contributorId: '',
     authorImage: '',
+    postedByName: '',
     date: '',
     publishedAt: '',
     readTime: '5 min',
@@ -73,9 +74,10 @@ export default function EditArticleModal({
         excerpt: article.excerpt || '',
         category: article.category || CATEGORIES[0].name,
         author: article.author || '',
-        authorDesignation: article.authorDesignation || 'Contributor',
+        authorDesignation: article.authorDesignation || 'Guest Contributor',
         contributorId: article.contributorId || article.contributor?.id || article.contributor?._id || '',
         authorImage: article.authorImage || '',
+        postedByName: article.postedByName || 'TechQuo News Editorial Team',
         date: article.date || new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
         publishedAt: article.publishedAt || (article.date ? new Date(article.date).toISOString() : new Date().toISOString()),
         readTime: article.readTime || '5 min',
@@ -365,7 +367,7 @@ export default function EditArticleModal({
             {/* Author Name and Designation */}
             <div className="grid md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <label className="editorial-label">Byline Author Name</label>
+                <label className="editorial-label">Byline Author Name (Original Writer)</label>
                 <input
                   required
                   type="text"
@@ -375,7 +377,7 @@ export default function EditArticleModal({
                 />
               </div>
               <div className="space-y-2">
-                <label className="editorial-label">Author Title / Designation</label>
+                <label className="editorial-label">Author Title / Designation (e.g. Guest Contributor)</label>
                 <input
                   required
                   type="text"
@@ -386,12 +388,22 @@ export default function EditArticleModal({
               </div>
             </div>
 
-            {article.postedByName && (
-              <div className="px-3 py-2 bg-slate-50 border border-slate-200/80 rounded text-[11px] text-slate-500 flex items-center gap-1.5">
-                <ShieldCheck size={13} className="text-brand-accent" />
-                <span>Originally posted & published by editor: <strong className="text-slate-700">{article.postedByName}</strong></span>
+            {/* Published By / Editorial Team Attribution */}
+            <div className="space-y-2">
+              <label className="editorial-label flex items-center justify-between">
+                <span>Published By (Editorial Desk / Editor)</span>
+                <span className="text-[10px] text-slate-400 font-normal normal-case">Clarifies internal editorial team vs guest author credit</span>
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="TechQuo News Editorial Team"
+                  className="w-full p-3 bg-slate-50 border border-slate-200 focus:outline-none focus:border-brand-accent text-sm"
+                  value={formData.postedByName || ''}
+                  onChange={(e) => setFormData({ ...formData, postedByName: e.target.value })}
+                />
               </div>
-            )}
+            </div>
 
             {/* Publication Date & Backdate Picker */}
             <ArticleDatePicker

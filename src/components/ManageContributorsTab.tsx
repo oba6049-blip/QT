@@ -17,9 +17,31 @@ import {
   Mail, 
   X,
   Upload,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Calendar
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+
+const formatDateForInput = (dateVal?: string): string => {
+  if (!dateVal) return '';
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateVal)) return dateVal;
+  const d = new Date(dateVal);
+  if (isNaN(d.getTime())) return '';
+  return d.toISOString().split('T')[0];
+};
+
+const formatJoinedDateDisplay = (dateVal?: string): string => {
+  if (!dateVal) return '—';
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateVal)) {
+    const d = new Date(dateVal + 'T00:00:00');
+    if (!isNaN(d.getTime())) {
+      return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+    }
+  }
+  const d = new Date(dateVal);
+  if (isNaN(d.getTime())) return dateVal;
+  return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+};
 
 interface ManageContributorsTabProps {
   onNavigateCreate?: () => void;
@@ -30,6 +52,7 @@ export default function ManageContributorsTab({ onNavigateCreate }: ManageContri
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [typeFilter, setTypeFilter] = useState<'all' | 'staff' | 'guest'>('all');
   
   // Feedback states
   const [error, setError] = useState<string | null>(null);
@@ -152,13 +175,14 @@ export default function ManageContributorsTab({ onNavigateCreate }: ManageContri
   // Filtered contributors
   const filteredContributors = contributors.filter((c) => {
     const matchesStatus = statusFilter === 'all' || c.status === statusFilter;
+    const matchesType = typeFilter === 'all' || (c.contributorType || 'staff') === typeFilter;
     const matchesSearch =
       !searchQuery.trim() ||
       c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       c.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       c.slug?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       c.expertise?.some((e) => e.toLowerCase().includes(searchQuery.toLowerCase()));
-    return matchesStatus && matchesSearch;
+    return matchesStatus && matchesType && matchesSearch;
   });
 
   return (
@@ -220,7 +244,7 @@ export default function ManageContributorsTab({ onNavigateCreate }: ManageContri
       )}
 
       {/* Filters & Search Toolbar */}
-      <div className="bg-white p-4 border border-slate-200 rounded-sm shadow-sm flex flex-col md:flex-row gap-4 justify-between items-stretch md:items-center">
+      <div className="bg-white p-4 border border-slate-200 rounded-sm shadow-sm flex flex-col lg:flex-row gap-4 justify-between items-stretch lg:items-center">
         <div className="relative flex-1">
           <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
@@ -232,36 +256,73 @@ export default function ManageContributorsTab({ onNavigateCreate }: ManageContri
           />
         </div>
 
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Status:</span>
-          <div className="flex bg-slate-100 p-0.5 rounded border border-slate-200 text-xs">
-            <button
-              type="button"
-              onClick={() => setStatusFilter('all')}
-              className={`px-3 py-1.5 rounded-sm font-medium transition-colors ${
-                statusFilter === 'all' ? 'bg-white text-black shadow-xs font-bold' : 'text-slate-600 hover:text-black'
-              }`}
-            >
-              All ({contributors.length})
-            </button>
-            <button
-              type="button"
-              onClick={() => setStatusFilter('active')}
-              className={`px-3 py-1.5 rounded-sm font-medium transition-colors ${
-                statusFilter === 'active' ? 'bg-white text-emerald-700 shadow-xs font-bold' : 'text-slate-600 hover:text-black'
-              }`}
-            >
-              Active ({contributors.filter((c) => c.status === 'active').length})
-            </button>
-            <button
-              type="button"
-              onClick={() => setStatusFilter('inactive')}
-              className={`px-3 py-1.5 rounded-sm font-medium transition-colors ${
-                statusFilter === 'inactive' ? 'bg-white text-slate-700 shadow-xs font-bold' : 'text-slate-600 hover:text-black'
-              }`}
-            >
-              Inactive ({contributors.filter((c) => c.status === 'inactive').length})
-            </button>
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Classification Filter */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Type:</span>
+            <div className="flex bg-slate-100 p-0.5 rounded border border-slate-200 text-xs">
+              <button
+                type="button"
+                onClick={() => setTypeFilter('all')}
+                className={`px-2.5 py-1.5 rounded-sm font-medium transition-colors ${
+                  typeFilter === 'all' ? 'bg-white text-black shadow-xs font-bold' : 'text-slate-600 hover:text-black'
+                }`}
+              >
+                All Types
+              </button>
+              <button
+                type="button"
+                onClick={() => setTypeFilter('staff')}
+                className={`px-2.5 py-1.5 rounded-sm font-medium transition-colors ${
+                  typeFilter === 'staff' ? 'bg-white text-indigo-700 shadow-xs font-bold' : 'text-slate-600 hover:text-black'
+                }`}
+              >
+                Staff ({contributors.filter((c) => (c.contributorType || 'staff') === 'staff').length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setTypeFilter('guest')}
+                className={`px-2.5 py-1.5 rounded-sm font-medium transition-colors ${
+                  typeFilter === 'guest' ? 'bg-white text-amber-700 shadow-xs font-bold' : 'text-slate-600 hover:text-black'
+                }`}
+              >
+                Guests ({contributors.filter((c) => c.contributorType === 'guest').length})
+              </button>
+            </div>
+          </div>
+
+          {/* Status Filter */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Status:</span>
+            <div className="flex bg-slate-100 p-0.5 rounded border border-slate-200 text-xs">
+              <button
+                type="button"
+                onClick={() => setStatusFilter('all')}
+                className={`px-2.5 py-1.5 rounded-sm font-medium transition-colors ${
+                  statusFilter === 'all' ? 'bg-white text-black shadow-xs font-bold' : 'text-slate-600 hover:text-black'
+                }`}
+              >
+                All
+              </button>
+              <button
+                type="button"
+                onClick={() => setStatusFilter('active')}
+                className={`px-2.5 py-1.5 rounded-sm font-medium transition-colors ${
+                  statusFilter === 'active' ? 'bg-white text-emerald-700 shadow-xs font-bold' : 'text-slate-600 hover:text-black'
+                }`}
+              >
+                Active ({contributors.filter((c) => c.status === 'active').length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setStatusFilter('inactive')}
+                className={`px-2.5 py-1.5 rounded-sm font-medium transition-colors ${
+                  statusFilter === 'inactive' ? 'bg-white text-slate-700 shadow-xs font-bold' : 'text-slate-600 hover:text-black'
+                }`}
+              >
+                Inactive ({contributors.filter((c) => c.status === 'inactive').length})
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -298,7 +359,9 @@ export default function ManageContributorsTab({ onNavigateCreate }: ManageContri
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-500">
                   <th className="py-3 px-4">Contributor</th>
+                  <th className="py-3 px-4">Type</th>
                   <th className="py-3 px-4">Designation</th>
+                  <th className="py-3 px-4">Joined</th>
                   <th className="py-3 px-4">Articles</th>
                   <th className="py-3 px-4">Status</th>
                   <th className="py-3 px-4">Beats / Topics</th>
@@ -309,6 +372,7 @@ export default function ManageContributorsTab({ onNavigateCreate }: ManageContri
                 {filteredContributors.map((c) => {
                   const slug = c.slug || c.id;
                   const profileImg = c.profileImage || c.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200';
+                  const isGuest = c.contributorType === 'guest';
                   return (
                     <tr key={c.id || c._id} className="hover:bg-slate-50/80 transition-colors">
                       <td className="py-3.5 px-4">
@@ -326,8 +390,27 @@ export default function ManageContributorsTab({ onNavigateCreate }: ManageContri
                         </div>
                       </td>
 
+                      <td className="py-3.5 px-4">
+                        {isGuest ? (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-amber-50 text-amber-800 border border-amber-200">
+                            Guest
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-indigo-50 text-indigo-800 border border-indigo-200">
+                            Staff
+                          </span>
+                        )}
+                      </td>
+
                       <td className="py-3.5 px-4 text-slate-600 max-w-xs">
-                        <span className="truncate block">{c.title || 'Contributor'}</span>
+                        <span className="truncate block">{c.title || (isGuest ? 'Guest Contributor' : 'Staff Writer')}</span>
+                      </td>
+
+                      <td className="py-3.5 px-4 text-slate-600 whitespace-nowrap">
+                        <div className="flex items-center gap-1.5 text-slate-700 font-medium">
+                          <Calendar size={12} className="text-slate-400" />
+                          <span>{formatJoinedDateDisplay(c.joinedAt)}</span>
+                        </div>
                       </td>
 
                       <td className="py-3.5 px-4">
@@ -451,7 +534,77 @@ export default function ManageContributorsTab({ onNavigateCreate }: ManageContri
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Contributor Classification (Staff vs Guest) */}
+              <div className="bg-slate-50 p-3.5 border border-slate-200 rounded-sm">
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-900 mb-1.5">
+                  Contributor Classification
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <label
+                    onClick={() => {
+                      setEditingContributor({ ...editingContributor, contributorType: 'staff' });
+                    }}
+                    className={`p-3 border rounded cursor-pointer transition-all flex items-start gap-2.5 ${
+                      (editingContributor.contributorType || 'staff') === 'staff'
+                        ? 'border-indigo-600 bg-indigo-50/50 shadow-2xs ring-1 ring-indigo-600'
+                        : 'border-slate-200 bg-white hover:border-slate-300'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="editContributorType"
+                      value="staff"
+                      checked={(editingContributor.contributorType || 'staff') === 'staff'}
+                      onChange={() => {}}
+                      className="mt-0.5 text-indigo-600 focus:ring-indigo-500"
+                    />
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-bold text-slate-900">Staff Contributor</span>
+                        <span className="px-1.5 py-0.5 bg-indigo-100 text-indigo-800 text-[9px] font-bold rounded">
+                          In-House Staff
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-slate-500 mt-0.5 leading-snug">
+                        TechQuo newsroom journalist or staff writer.
+                      </p>
+                    </div>
+                  </label>
+
+                  <label
+                    onClick={() => {
+                      setEditingContributor({ ...editingContributor, contributorType: 'guest' });
+                    }}
+                    className={`p-3 border rounded cursor-pointer transition-all flex items-start gap-2.5 ${
+                      editingContributor.contributorType === 'guest'
+                        ? 'border-amber-600 bg-amber-50/50 shadow-2xs ring-1 ring-amber-600'
+                        : 'border-slate-200 bg-white hover:border-slate-300'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="editContributorType"
+                      value="guest"
+                      checked={editingContributor.contributorType === 'guest'}
+                      onChange={() => {}}
+                      className="mt-0.5 text-amber-600 focus:ring-amber-500"
+                    />
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-bold text-slate-900">Guest Contributor</span>
+                        <span className="px-1.5 py-0.5 bg-amber-100 text-amber-800 text-[9px] font-bold rounded">
+                          External Writer
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-slate-500 mt-0.5 leading-snug">
+                        Guest analyst, industry expert, or submitted opinion piece.
+                      </p>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
                     Designation / Title
@@ -462,6 +615,19 @@ export default function ManageContributorsTab({ onNavigateCreate }: ManageContri
                     onChange={(e) => setEditingContributor({ ...editingContributor, title: e.target.value })}
                     required
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded text-xs focus:outline-none focus:border-black"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1 flex items-center justify-between">
+                    <span>Joined Date</span>
+                    <span className="text-[10px] text-slate-400 font-normal normal-case">Backdate</span>
+                  </label>
+                  <input
+                    type="date"
+                    value={formatDateForInput(editingContributor.joinedAt)}
+                    onChange={(e) => setEditingContributor({ ...editingContributor, joinedAt: e.target.value })}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded text-xs focus:outline-none focus:border-black font-medium"
                   />
                 </div>
 

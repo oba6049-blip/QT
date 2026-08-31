@@ -302,9 +302,10 @@ export default function AdminDashboard() {
     excerpt: "",
     category: CATEGORIES[0].name,
     author: user?.displayName || "Admin",
-    authorDesignation: "Contributor",
+    authorDesignation: "Guest Contributor",
     contributorId: "",
     authorImage: "",
+    postedByName: "TechQuo News Editorial Team",
     date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
     publishedAt: new Date().toISOString(),
     readTime: "5 min",
@@ -342,9 +343,10 @@ export default function AdminDashboard() {
     image: "",
     link: "",
     author: user?.displayName || "TechQuo Editorial Staff",
-    authorDesignation: "Contributor",
+    authorDesignation: "Guest Contributor",
     contributorId: "",
     authorImage: "",
+    postedByName: "TechQuo News Editorial Team",
   });
 
   if (!user) {
@@ -501,17 +503,18 @@ export default function AdminDashboard() {
         image: imageUrl,
         authorId: user.uid,
         postedBy: user.uid,
-        postedByName: user.displayName || user.email || 'Editorial Staff'
+        postedByName: (formData as any).postedByName?.trim() || user.displayName || 'TechQuo News Editorial Team'
       } as any);
       setSuccess(true);
       setFormData({
         ...formData,
         title: "",
         excerpt: "",
-        authorDesignation: "Contributor",
+        authorDesignation: "Guest Contributor",
         image: "",
         content: "",
         featured: false,
+        postedByName: "TechQuo News Editorial Team",
         date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
         publishedAt: new Date().toISOString(),
       });
@@ -645,11 +648,11 @@ export default function AdminDashboard() {
         ...spotlightFormData,
         image: imageUrl,
         author: spotlightFormData.author.trim() || user.displayName || 'TechQuo Editorial Staff',
-        authorDesignation: spotlightFormData.authorDesignation.trim() || 'Contributor',
+        authorDesignation: spotlightFormData.authorDesignation.trim() || 'Guest Contributor',
         contributorId: spotlightFormData.contributorId || undefined,
         authorImage: spotlightFormData.authorImage || undefined,
         postedBy: user.uid,
-        postedByName: user.displayName || user.email || 'Editorial Staff'
+        postedByName: spotlightFormData.postedByName?.trim() || user.displayName || 'TechQuo News Editorial Team'
       });
       setSuccess(true);
       setSpotlightFormData({
@@ -660,9 +663,10 @@ export default function AdminDashboard() {
         image: "",
         link: "",
         author: user.displayName || "TechQuo Editorial Staff",
-        authorDesignation: "Contributor",
+        authorDesignation: "Guest Contributor",
         contributorId: "",
         authorImage: "",
+        postedByName: "TechQuo News Editorial Team",
       });
       setImageFile(null);
       setImagePreview(null);
@@ -1138,12 +1142,12 @@ export default function AdminDashboard() {
 
                 <div className="grid md:grid-cols-2 gap-8">
                   <div className="space-y-2">
-                    <label className="editorial-label">Author Name</label>
+                    <label className="editorial-label">Author Name (Original Writer)</label>
                     <input 
                       required
                       type="text" 
                       className="w-full p-4 bg-slate-50 border border-slate-200 outline-hidden focus:border-brand-accent text-sm"
-                      placeholder="e.g. John Doe"
+                      placeholder="e.g. Hafsat Itanola"
                       value={formData.author}
                       onChange={e => setFormData({...formData, author: e.target.value})}
                     />
@@ -1154,11 +1158,25 @@ export default function AdminDashboard() {
                       required
                       type="text" 
                       className="w-full p-4 bg-slate-50 border border-slate-200 outline-hidden focus:border-brand-accent text-sm"
-                      placeholder="e.g. Senior Strategy Analyst"
+                      placeholder="e.g. Guest Contributor"
                       value={formData.authorDesignation}
                       onChange={e => setFormData({...formData, authorDesignation: e.target.value})}
                     />
                   </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="editorial-label flex items-center justify-between">
+                    <span>Published By (Editorial Desk / Editor)</span>
+                    <span className="text-[10px] text-slate-400 font-normal normal-case">Clarifies internal editorial team vs guest author credit</span>
+                  </label>
+                  <input 
+                    type="text" 
+                    className="w-full p-4 bg-slate-50 border border-slate-200 outline-hidden focus:border-brand-accent text-sm"
+                    placeholder="TechQuo News Editorial Team"
+                    value={formData.postedByName || ''}
+                    onChange={e => setFormData({...formData, postedByName: e.target.value})}
+                  />
                 </div>
 
                 <div className="space-y-2">
@@ -1687,12 +1705,12 @@ export default function AdminDashboard() {
                   <div className="grid md:grid-cols-2 gap-4 pt-2">
                     <div className="space-y-1.5">
                       <label className="text-xs font-bold uppercase tracking-wider text-slate-600">
-                        Author Name
+                        Author Name (Original Writer)
                       </label>
                       <input
                         type="text"
                         className="w-full p-3 bg-white border border-slate-300 rounded-sm outline-hidden focus:border-black text-sm"
-                        placeholder="e.g. Subair Nurudeen"
+                        placeholder="e.g. Hafsat Itanola"
                         value={spotlightFormData.author}
                         onChange={(e) => setSpotlightFormData({ ...spotlightFormData, author: e.target.value })}
                       />
@@ -1704,11 +1722,25 @@ export default function AdminDashboard() {
                       <input
                         type="text"
                         className="w-full p-3 bg-white border border-slate-300 rounded-sm outline-hidden focus:border-black text-sm"
-                        placeholder="e.g. Senior Tech Journalist"
+                        placeholder="e.g. Guest Contributor"
                         value={spotlightFormData.authorDesignation}
                         onChange={(e) => setSpotlightFormData({ ...spotlightFormData, authorDesignation: e.target.value })}
                       />
                     </div>
+                  </div>
+
+                  <div className="space-y-1.5 pt-1">
+                    <label className="text-xs font-bold uppercase tracking-wider text-slate-600 flex items-center justify-between">
+                      <span>Published By (Editorial Desk / Editor)</span>
+                      <span className="text-[10px] text-slate-400 font-normal normal-case">Internal TechQuo editorial team attribution</span>
+                    </label>
+                    <input
+                      type="text"
+                      className="w-full p-3 bg-white border border-slate-300 rounded-sm outline-hidden focus:border-black text-sm"
+                      placeholder="TechQuo News Editorial Team"
+                      value={spotlightFormData.postedByName || ''}
+                      onChange={(e) => setSpotlightFormData({ ...spotlightFormData, postedByName: e.target.value })}
+                    />
                   </div>
                 </div>
 

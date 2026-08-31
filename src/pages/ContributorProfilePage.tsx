@@ -128,9 +128,18 @@ export default function ContributorProfilePage() {
     contributor.avatar ||
     'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=400';
 
-  const joinedFormatted = contributor.joinedAt
-    ? new Date(contributor.joinedAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
-    : '2024';
+  const joinedFormatted = (() => {
+    if (!contributor.joinedAt) return '2024';
+    if (/^\d{4}-\d{2}-\d{2}$/.test(contributor.joinedAt)) {
+      const d = new Date(contributor.joinedAt + 'T00:00:00');
+      if (!isNaN(d.getTime())) {
+        return d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+      }
+    }
+    const d = new Date(contributor.joinedAt);
+    if (isNaN(d.getTime())) return contributor.joinedAt;
+    return d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  })();
 
   const isIndexable = contributor.status === 'active' && articles.length > 0;
   const canonicalUrl = `https://techquonews.com/contributors/${contributor.slug || slug}`;
@@ -230,9 +239,15 @@ export default function ContributorProfilePage() {
               {/* Bio & Details */}
               <div className="flex-1 space-y-4">
                 <div className="flex flex-wrap items-center gap-3">
-                  <span className="text-[11px] font-bold uppercase tracking-widest text-brand-accent bg-orange-50 px-2.5 py-1 rounded-sm border border-orange-100">
-                    Staff Contributor
-                  </span>
+                  {contributor.contributorType === 'guest' ? (
+                    <span className="text-[11px] font-bold uppercase tracking-widest text-amber-800 bg-amber-50 px-2.5 py-1 rounded-sm border border-amber-200">
+                      Guest Contributor
+                    </span>
+                  ) : (
+                    <span className="text-[11px] font-bold uppercase tracking-widest text-indigo-800 bg-indigo-50 px-2.5 py-1 rounded-sm border border-indigo-200">
+                      Staff Contributor
+                    </span>
+                  )}
                   <span className="text-xs text-slate-400 flex items-center gap-1 font-medium">
                     <Calendar size={13} /> Joined {joinedFormatted}
                   </span>

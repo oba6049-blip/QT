@@ -88,22 +88,30 @@ export default function Spotlight() {
                   </p>
                 </div>
                 
-                <div className="flex items-center justify-between pt-8 border-t border-slate-100">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between pt-6 border-t border-slate-100 gap-4">
                   <div>
-                    <p className="font-bold text-slate-900">{story.founderName}</p>
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Founder & Visionary</p>
+                    <p className="font-bold text-slate-900 leading-tight">{story.founderName}</p>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Founder & Visionary • {story.companyName}</p>
                   </div>
-                  {story.link && (
-                    <a 
-                      href={story.link} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                      className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center hover:bg-black hover:text-white transition-all text-slate-400"
-                    >
-                      <ArrowRight size={18} />
-                    </a>
-                  )}
+                  
+                  <div className="flex items-center gap-3 sm:text-right">
+                    <div className="space-y-0.5 text-left sm:text-right">
+                      <p className="text-xs font-semibold text-slate-800">By {story.author || 'TechQuo Editorial Staff'}</p>
+                      <p className="text-[10px] text-slate-400">Published by {story.postedByName || 'TechQuo News'}</p>
+                    </div>
+                    {story.link && (
+                      <a 
+                        href={story.link} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="w-9 h-9 rounded-full border border-slate-200 flex items-center justify-center hover:bg-black hover:text-white transition-all text-slate-400 shrink-0"
+                        title="Visit feature link"
+                      >
+                        <ArrowRight size={16} />
+                      </a>
+                    )}
+                  </div>
                 </div>
               </div>
             </motion.div>

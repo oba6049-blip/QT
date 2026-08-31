@@ -56,9 +56,10 @@ class FallbackDatabase {
         slug: "hafsat-itanola",
         profileImage: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=400",
         avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=400",
-        title: "FinTech & Wealth Columnist",
-        bio: "Hafsat Itanola is a financial writer and analyst examining ethical investment models, financial literacy, and personal wealth development in Nigeria.",
-        longBio: "Hafsat Itanola specializes in ethical finance, financial literacy advocacy, and sustainable wealth-building strategies within Nigeria and emerging African markets. Her work focuses on bridging information gaps for retail investors and promoting informed financial decision-making.",
+        title: "Guest Contributor",
+        contributorType: "guest",
+        bio: "Hafsat Itanola is a financial writer and guest analyst examining ethical investment models, financial literacy, and personal wealth development in Nigeria.",
+        longBio: "Hafsat Itanola is a guest contributor specializing in ethical finance, financial literacy advocacy, and sustainable wealth-building strategies within Nigeria and emerging African markets. Her work focuses on bridging information gaps for retail investors and promoting informed financial decision-making.",
         email: "hafsat.itanola@techquonews.com",
         showEmail: false,
         socialLinks: {
@@ -83,8 +84,10 @@ class FallbackDatabase {
         category: "FinTech",
         contributorId: "contrib_hafsat",
         author: "Hafsat Itanola",
-        authorDesignation: "FinTech & Wealth Columnist",
+        authorDesignation: "Guest Contributor",
         authorImage: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=400",
+        postedBy: "user_root_admin",
+        postedByName: "TechQuo News Editorial Team",
         date: "August 28, 2026",
         publishedAt: "2026-08-28T16:40:00Z",
         readTime: "6 min",
@@ -105,8 +108,10 @@ class FallbackDatabase {
         category: "FinTech",
         contributorId: "contrib_hafsat",
         author: "Hafsat Itanola",
-        authorDesignation: "FinTech & Wealth Columnist",
+        authorDesignation: "Guest Contributor",
         authorImage: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=400",
+        postedBy: "user_root_admin",
+        postedByName: "TechQuo News Editorial Team",
         date: "August 28, 2026",
         publishedAt: "2026-08-28T16:45:00Z",
         readTime: "7 min",
@@ -397,7 +402,7 @@ async function seedMongoIfEmpty(database: Db) {
           contributorDocId = existingContrib._id ? existingContrib._id.toString() : (existingContrib.id || "");
         }
 
-        // Ensure article has slug and contributorId
+        // Ensure article has slug, contributorId, and postedByName
         const updates: any = {};
         if (!art.slug) {
           updates.slug = generateSlug(art.title);
@@ -405,9 +410,30 @@ async function seedMongoIfEmpty(database: Db) {
         if (!art.contributorId && contributorDocId) {
           updates.contributorId = contributorDocId;
         }
+        if (!art.postedByName) {
+          updates.postedByName = "TechQuo News Editorial Team";
+        }
         if (Object.keys(updates).length > 0) {
           await database.collection("articles").updateOne({ _id: art._id }, { $set: updates });
         }
+      }
+    }
+
+    // Ensure all spotlights have postedByName and author attribution
+    const existingSpotlights = await database.collection("spotlights").find({}).toArray();
+    for (const spot of existingSpotlights) {
+      const spotUpdates: any = {};
+      if (!spot.postedByName) {
+        spotUpdates.postedByName = "TechQuo News Editorial Team";
+      }
+      if (!spot.author) {
+        spotUpdates.author = "TechQuo Editorial Staff";
+      }
+      if (!spot.authorDesignation) {
+        spotUpdates.authorDesignation = "Staff Reporter";
+      }
+      if (Object.keys(spotUpdates).length > 0) {
+        await database.collection("spotlights").updateOne({ _id: spot._id }, { $set: spotUpdates });
       }
     }
 
@@ -459,7 +485,7 @@ async function seedMongoIfEmpty(database: Db) {
 // CONTRIBUTORS API
 // -------------------------------------------------------------
 
-export async function getContributorsFromDb(filter: { status?: string } = {}) {
+export async function getContributorsFromDb(filter: { status?: string; contributorType?: string } = {}) {
   const database = await getDb();
   let rawContributors: any[] = [];
 
@@ -468,6 +494,9 @@ export async function getContributorsFromDb(filter: { status?: string } = {}) {
       const query: any = {};
       if (filter.status) {
         query.status = filter.status;
+      }
+      if (filter.contributorType) {
+        query.contributorType = filter.contributorType;
       }
       const docs = await database.collection("contributors").find(query).sort({ name: 1 }).toArray();
       rawContributors = docs.map(formatDoc);
@@ -480,6 +509,9 @@ export async function getContributorsFromDb(filter: { status?: string } = {}) {
     let results = [...fallbackDb.contributors];
     if (filter.status) {
       results = results.filter((c) => c.status === filter.status);
+    }
+    if (filter.contributorType) {
+      results = results.filter((c) => (c.contributorType || 'staff') === filter.contributorType);
     }
     rawContributors = results.map(formatDoc);
   }
@@ -575,7 +607,8 @@ export async function createContributorInDb(data: any) {
   const newContributor = {
     name: (data.name || "").trim(),
     slug: slug,
-    title: (data.title || "Contributor").trim(),
+    title: (data.title || (data.contributorType === "guest" ? "Guest Contributor" : "Contributor")).trim(),
+    contributorType: data.contributorType === "guest" ? "guest" : "staff",
     bio: (data.bio || "").trim(),
     longBio: (data.longBio || data.bio || "").trim(),
     profileImage: normalizeImageUrl(data.profileImage || data.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=400"),
@@ -594,7 +627,7 @@ export async function createContributorInDb(data: any) {
       ? data.expertise.split(",").map((s: string) => s.trim()).filter(Boolean)
       : ["Technology"],
     status: data.status === "inactive" ? "inactive" : "active",
-    joinedAt: data.joinedAt || new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" }),
+    joinedAt: data.joinedAt || new Date().toISOString().split("T")[0],
     createdAt: new Date().toISOString(),
   };
 
@@ -725,6 +758,7 @@ async function enrichArticleWithContributor(articleDoc: any, contributorsList?: 
       slug: contributor.slug || generateSlug(contributor.name),
       profileImage: contributor.profileImage || contributor.avatar,
       title: contributor.title,
+      contributorType: contributor.contributorType || 'staff',
       bio: contributor.bio,
       longBio: contributor.longBio,
       socialLinks: contributor.socialLinks,

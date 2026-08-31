@@ -403,7 +403,17 @@ export function createApp(): express.Application {
   app.get("/api/contributors", async (req, res) => {
     try {
       const status = typeof req.query.status === "string" ? req.query.status : undefined;
-      const contributors = await getContributorsFromDb(status === "all" ? {} : (status ? { status } : { status: "active" }));
+      const contributorType = typeof req.query.contributorType === "string" ? req.query.contributorType : (typeof req.query.type === "string" ? req.query.type : undefined);
+      const filter: any = {};
+      if (status && status !== "all") {
+        filter.status = status;
+      } else if (!status) {
+        filter.status = "active";
+      }
+      if (contributorType && contributorType !== "all") {
+        filter.contributorType = contributorType;
+      }
+      const contributors = await getContributorsFromDb(filter);
       res.json(contributors);
     } catch (e: any) {
       res.status(500).json({ error: e.message });

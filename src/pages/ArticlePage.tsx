@@ -19,7 +19,8 @@ import {
   Mail, 
   ArrowRight,
   Sparkles,
-  Edit3
+  Edit3,
+  ShieldCheck
 } from "lucide-react";
 import { getArticleById } from "../services/articleService";
 import { Article } from "../types";
@@ -107,9 +108,10 @@ export default function ArticlePage() {
   const contributor = article.contributor;
   const authorSlug = contributor?.slug || (article.author ? article.author.toLowerCase().trim().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-') : 'editorial-team');
   const authorProfileLink = `/contributors/${authorSlug}`;
-  const authorAvatar = contributor?.profileImage || contributor?.avatar || article.authorImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(article.author)}&background=f1f5f9&color=000`;
-  const authorTitle = contributor?.title || article.authorDesignation || 'Editorial Contributor';
-  const authorBio = contributor?.bio || `Author and contributing journalist covering ${article.category || 'African technology'} at TechQuo News.`;
+  const authorAvatar = contributor?.profileImage || contributor?.avatar || article.authorImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(article.author)}&background=000&color=fff`;
+  const authorTitle = article.authorDesignation || contributor?.title || 'Guest Contributor';
+  const publishedByName = article.postedByName || 'TechQuo News Editorial Team';
+  const authorBio = contributor?.bio || `Author and contributing journalist covering ${article.category || 'African technology and markets'} at TechQuo News.`;
 
   const categorySlug = (article.category || routeCategory || "technology")
     .toLowerCase()
@@ -134,7 +136,7 @@ export default function ArticlePage() {
     },
     "publisher": {
       "@type": "Organization",
-      "name": "TechQuo News",
+      "name": publishedByName,
       "url": "https://techquonews.com",
       "logo": {
         "@type": "ImageObject",
@@ -211,43 +213,56 @@ export default function ArticlePage() {
               {article.excerpt}
             </p>
 
-            <div className="flex flex-wrap items-center justify-between mt-12 pt-8 border-t border-slate-100 gap-6">
-              {/* Linked Author Byline */}
-              <Link 
-                to={authorProfileLink}
-                className="flex items-center gap-4 group/author"
-              >
-                <div className="w-12 h-12 rounded-full overflow-hidden border border-slate-200 shrink-0 group-hover/author:ring-2 group-hover/author:ring-brand-accent transition-all">
-                   <img 
-                     src={authorAvatar} 
-                     alt={article.author} 
-                     className="w-full h-full object-cover"
-                     referrerPolicy="no-referrer"
-                   />
-                </div>
-                <div>
-                  <p className="font-bold text-base sm:text-lg leading-tight text-slate-900 group-hover/author:text-brand-accent transition-colors flex items-center gap-1.5">
-                    {article.author}
-                    <UserCheck size={14} className="text-emerald-600" />
-                  </p>
-                  <p className="text-xs text-slate-500 flex items-center flex-wrap gap-1.5 mt-0.5">
-                    <Calendar size={12} />
+            <div className="flex flex-col md:flex-row md:items-center justify-between mt-12 pt-8 border-t border-slate-100 gap-6">
+              {/* Linked Author Byline & Publishing Attribution */}
+              <div className="flex items-start sm:items-center gap-4">
+                <Link 
+                  to={authorProfileLink}
+                  className="shrink-0 group/author"
+                >
+                  <div className="w-13 h-13 rounded-full overflow-hidden border-2 border-slate-200 group-hover/author:border-brand-accent group-hover/author:ring-2 group-hover/author:ring-brand-accent/20 transition-all shadow-xs">
+                     <img 
+                       src={authorAvatar} 
+                       alt={article.author} 
+                       className="w-full h-full object-cover"
+                       referrerPolicy="no-referrer"
+                     />
+                  </div>
+                </Link>
+                
+                <div className="space-y-1">
+                  {/* Author Line */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-xs uppercase font-bold tracking-wider text-slate-400">By</span>
+                    <Link 
+                      to={authorProfileLink}
+                      className="font-bold text-base sm:text-lg text-slate-950 hover:text-brand-accent transition-colors flex items-center gap-1.5"
+                    >
+                      {article.author}
+                      <UserCheck size={14} className="text-emerald-600" />
+                    </Link>
+                    <span className="inline-flex items-center text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
+                      {authorTitle}
+                    </span>
+                  </div>
+
+                  {/* Published By Line */}
+                  <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                    <ShieldCheck size={13} className="text-brand-accent shrink-0" />
+                    <span>Published by <strong className="font-semibold text-slate-800">{publishedByName}</strong></span>
+                  </div>
+
+                  {/* Date & Read Time */}
+                  <div className="flex items-center gap-2 text-xs text-slate-400 pt-0.5">
+                    <Calendar size={12} className="text-slate-400" />
                     <span>{article.date}</span>
                     <span>•</span>
-                    <span className="font-medium">{authorTitle}</span>
-                    {article.postedByName && (
-                      <>
-                        <span>•</span>
-                        <span className="text-slate-400">
-                          Posted by <strong className="text-slate-600 font-medium">{article.postedByName}</strong>
-                        </span>
-                      </>
-                    )}
-                  </p>
+                    <span>{article.readTime}</span>
+                  </div>
                 </div>
-              </Link>
+              </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 self-start md:self-center">
                 {user && (
                   <Link
                     to={`/admin?edit=${article.id || (article as any)._id}`}
@@ -401,13 +416,18 @@ export default function ArticlePage() {
                   </div>
                 )}
 
-                <div className="pt-2">
+                <div className="pt-2 flex flex-wrap items-center justify-between gap-4 border-t border-slate-200/60">
                   <Link
                     to={authorProfileLink}
                     className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-black hover:text-brand-accent transition-colors"
                   >
                     View All Articles by {article.author} <ArrowRight size={13} />
                   </Link>
+
+                  <div className="text-[11px] text-slate-500 flex items-center gap-1.5">
+                    <ShieldCheck size={13} className="text-brand-accent shrink-0" />
+                    <span>Published & Verified by <strong className="font-semibold text-slate-800">{publishedByName}</strong></span>
+                  </div>
                 </div>
               </div>
             </div>
