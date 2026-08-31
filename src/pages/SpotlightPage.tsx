@@ -22,6 +22,7 @@ import { getContributorById } from "../services/contributorService";
 import { SpotlightStory, Contributor } from "../types";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import SharePreviewModal from "../components/SharePreviewModal";
 
 export default function SpotlightPage() {
   const { id } = useParams<{ id: string }>();
@@ -29,6 +30,7 @@ export default function SpotlightPage() {
   const [contributor, setContributor] = useState<Contributor | null>(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchStory = async () => {
@@ -51,9 +53,7 @@ export default function SpotlightPage() {
   }, [id]);
 
   const handleShare = () => {
-    navigator.clipboard.writeText(window.location.href);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setIsShareModalOpen(true);
   };
 
   if (loading) {
@@ -163,10 +163,14 @@ export default function SpotlightPage() {
         <meta property="og:title" content={pageTitle} />
         <meta property="og:description" content={pageDescription} />
         <meta property="og:image" content={story.image} />
+        <meta property="og:image:secure_url" content={story.image} />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
         <meta property="og:url" content={canonicalUrl} />
         <meta property="og:type" content="article" />
         <meta property="og:site_name" content="TechQuo News" />
         <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="@TechQuoNews" />
         <meta name="twitter:title" content={pageTitle} />
         <meta name="twitter:description" content={pageDescription} />
         <meta name="twitter:image" content={story.image} />
@@ -174,6 +178,19 @@ export default function SpotlightPage() {
           {JSON.stringify(schemaJsonLd)}
         </script>
       </Helmet>
+
+      {/* Social Share & Link Preview Modal */}
+      <SharePreviewModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        title={`${story.founderName} (${story.companyName}) — "${story.title}"`}
+        description={pageDescription}
+        url={canonicalUrl}
+        image={story.image || "https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&fit=crop&q=80&w=1200"}
+        type="spotlight"
+        categoryOrFounder={story.founderName}
+        authorName={authorName}
+      />
 
       <Navbar />
       

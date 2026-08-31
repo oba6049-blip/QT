@@ -14,7 +14,9 @@ import {
 import { 
   getBaseUrl, 
   getSiteName, 
-  normalizeCategorySlug 
+  normalizeCategorySlug,
+  toAbsoluteUrl,
+  cleanPlainText
 } from "./server/seo";
 
 // Load environment variables
@@ -28,54 +30,110 @@ function injectMetaTags(html: string, options: {
   robots?: string;
   ogType?: string;
   schemaJson?: any;
+  publishedTime?: string;
+  modifiedTime?: string;
+  section?: string;
+  authorName?: string;
+  twitterCreator?: string;
+  baseUrl?: string;
 }) {
   let output = html;
   const siteName = getSiteName();
+  const baseUrl = options.baseUrl || "https://techquonews.com";
   const title = options.title || `${siteName} | African Tech, FinTech & Startup Insights`;
   const description = options.description || "A premium digital media and news publishing platform for African tech, fintech, venture capital, and startup insights.";
-  const image = options.image || "/og-image.png";
+  const rawImage = options.image || "/og-image.png";
+  const absoluteImage = toAbsoluteUrl(rawImage, baseUrl);
   const robots = options.robots || "index, follow";
   const ogType = options.ogType || "website";
+  const canonicalUrl = options.canonicalUrl ? toAbsoluteUrl(options.canonicalUrl, baseUrl) : baseUrl;
 
-  // Replace Title
-  output = output.replace(/<title>.*?<\/title>/i, `<title>${title}</title>`);
+  // Escape helpers for HTML attributes
+  const safeTitle = title.replace(/"/g, "&quot;");
+  const safeDescription = description.replace(/"/g, "&quot;");
+  const safeImage = absoluteImage.replace(/"/g, "&quot;");
+
+  // 1. Replace or update Title
+  output = output.replace(/<title>.*?<\/title>/i, `<title>${safeTitle}</title>`);
   
-  // Replace meta descriptions
+  // 2. Replace meta descriptions
   if (output.includes('id="meta-description"')) {
-    output = output.replace(/id="meta-description" content=".*?"/i, `id="meta-description" content="${description.replace(/"/g, "&quot;")}"`);
+    output = output.replace(/id="meta-description" content=".*?"/i, `id="meta-description" content="${safeDescription}"`);
+  } else {
+    output = output.replace(/<meta name="description" content=".*?"/i, `<meta name="description" content="${safeDescription}"`);
   }
   
-  // Replace OpenGraph tags
+  // 3. Replace OpenGraph tags with absolute values
   if (output.includes('id="og-title"')) {
-    output = output.replace(/id="og-title" content=".*?"/i, `id="og-title" content="${title.replace(/"/g, "&quot;")}"`);
+    output = output.replace(/id="og-title" content=".*?"/i, `id="og-title" content="${safeTitle}"`);
   }
   if (output.includes('id="og-description"')) {
-    output = output.replace(/id="og-description" content=".*?"/i, `id="og-description" content="${description.replace(/"/g, "&quot;")}"`);
+    output = output.replace(/id="og-description" content=".*?"/i, `id="og-description" content="${safeDescription}"`);
   }
   if (output.includes('id="og-image"')) {
-    output = output.replace(/id="og-image" content=".*?"/i, `id="og-image" content="${image}"`);
+    output = output.replace(/id="og-image" content=".*?"/i, `id="og-image" content="${safeImage}"`);
+  }
+  if (output.includes('property="og:type"')) {
+    output = output.replace(/property="og:type" content=".*?"/i, `property="og:type" content="${ogType}"`);
   }
 
-  // Replace Twitter tags
+  // 4. Replace Twitter tags with absolute values
   if (output.includes('id="twitter-title"')) {
-    output = output.replace(/id="twitter-title" content=".*?"/i, `id="twitter-title" content="${title.replace(/"/g, "&quot;")}"`);
+    output = output.replace(/id="twitter-title" content=".*?"/i, `id="twitter-title" content="${safeTitle}"`);
   }
   if (output.includes('id="twitter-description"')) {
-    output = output.replace(/id="twitter-description" content=".*?"/i, `id="twitter-description" content="${description.replace(/"/g, "&quot;")}"`);
+    output = output.replace(/id="twitter-description" content=".*?"/i, `id="twitter-description" content="${safeDescription}"`);
   }
   if (output.includes('id="twitter-image"')) {
-    output = output.replace(/id="twitter-image" content=".*?"/i, `id="twitter-image" content="${image}"`);
+    output = output.replace(/id="twitter-image" content=".*?"/i, `id="twitter-image" content="${safeImage}"`);
   }
 
-  // Build head additions (robots meta, canonical link, og:url, og:type, og:site_name, schema)
-  let headAdditions = `\n  <meta name="robots" content="${robots}" />`;
-  if (options.canonicalUrl) {
-    headAdditions += `\n  <link rel="canonical" href="${options.canonicalUrl}" />`;
-    headAdditions += `\n  <meta property="og:url" content="${options.canonicalUrl}" />`;
-  }
-  headAdditions += `\n  <meta property="og:type" content="${ogType}" />`;
+  // 5. Build rich social preview head additions (WhatsApp, LinkedIn, Twitter, Facebook, Slack, iMessage)
+  let headAdditions = `\n  <!-- Search Engine Crawl Directives -->\n  <meta name="robots" content="${robots}" />`;
+  headAdditions += `\n  <link rel="canonical" href="${canonicalUrl}" />`;
+  headAdditions += `\n  <meta property="og:url" content="${canonicalUrl}" />`;
   headAdditions += `\n  <meta property="og:site_name" content="${siteName}" />`;
+  
+  // High-Resolution WhatsApp & Facebook Image Metadata
+  headAdditions += `\n  <meta property="og:image:secure_url" content="${safeImage}" />`;
+  headAdditions += `\n  <meta property="og:image:width" content="1200" />`;
+  headAdditions += `\n  <meta property="og:image:height" content="630" />`;
+  headAdditions += `\n  <meta property="og:image:alt" content="${safeTitle}" />`;
+  
+  // Image MIME type detection
+  if (safeImage.endsWith(".png")) {
+    headAdditions += `\n  <meta property="og:image:type" content="image/png" />`;
+  } else if (safeImage.endsWith(".webp")) {
+    headAdditions += `\n  <meta property="og:image:type" content="image/webp" />`;
+  } else {
+    headAdditions += `\n  <meta property="og:image:type" content="image/jpeg" />`;
+  }
 
+  // Twitter Extra Card Directives
+  headAdditions += `\n  <meta name="twitter:site" content="@TechQuoNews" />`;
+  if (options.twitterCreator) {
+    headAdditions += `\n  <meta name="twitter:creator" content="${options.twitterCreator}" />`;
+  }
+  headAdditions += `\n  <meta name="twitter:image:alt" content="${safeTitle}" />`;
+
+  // Article Specific Open Graph Properties
+  if (ogType === "article") {
+    if (options.publishedTime) {
+      headAdditions += `\n  <meta property="article:published_time" content="${options.publishedTime}" />`;
+    }
+    if (options.modifiedTime) {
+      headAdditions += `\n  <meta property="article:modified_time" content="${options.modifiedTime}" />`;
+    }
+    if (options.section) {
+      headAdditions += `\n  <meta property="article:section" content="${options.section}" />`;
+    }
+    if (options.authorName) {
+      headAdditions += `\n  <meta property="article:author" content="${options.authorName}" />`;
+      headAdditions += `\n  <meta name="author" content="${options.authorName}" />`;
+    }
+  }
+
+  // Structured Data JSON-LD
   if (options.schemaJson) {
     headAdditions += `\n  <script type="application/ld+json">${JSON.stringify(options.schemaJson)}</script>`;
   }
@@ -169,6 +227,8 @@ async function startServer() {
           robots: isIndexable ? "index, follow" : "noindex, follow",
           ogType: "profile",
           schemaJson: schemaJsonLd,
+          baseUrl,
+          authorName: contributor.name,
         });
       }
 
@@ -193,7 +253,7 @@ async function startServer() {
         const catSlug = normalizeCategorySlug(article.category);
         const artSlug = article.slug || article.id || id;
         const title = `${article.title} | TechQuo News`;
-        const description = article.excerpt || "Read this article on TechQuo News";
+        const description = cleanPlainText(article.excerpt || article.content || "Read this article on TechQuo News", 160);
         const image = article.image || "/og-image.png";
         const canonicalUrl = `${baseUrl}/${catSlug}/${artSlug}`;
         const isPublished = article.status === "published" && article.visibility !== "private" && !article.deleted;
@@ -204,8 +264,8 @@ async function startServer() {
           "@context": "https://schema.org",
           "@type": "NewsArticle",
           "headline": article.title,
-          "description": article.excerpt,
-          "image": [image],
+          "description": description,
+          "image": [toAbsoluteUrl(image, baseUrl)],
           "datePublished": article.publishedAt || article.createdAt,
           "dateModified": article.updatedAt || article.publishedAt || article.createdAt,
           "author": {
@@ -236,6 +296,11 @@ async function startServer() {
           robots: isPublished ? "index, follow" : "noindex, nofollow",
           ogType: "article",
           schemaJson: schemaJsonLd,
+          publishedTime: article.publishedAt || article.createdAt,
+          modifiedTime: article.updatedAt || article.publishedAt || article.createdAt,
+          section: article.category,
+          authorName: article.author,
+          baseUrl,
         });
       }
 
@@ -258,14 +323,10 @@ async function startServer() {
 
       if (spotlight) {
         const spotSlug = spotlight.slug || spotlight.id || id;
-        const cleanSnippet = (spotlight.story || "")
-          .replace(/<[^>]*>/g, " ")
-          .replace(/\s+/g, " ")
-          .trim()
-          .slice(0, 160);
+        const cleanSnippet = cleanPlainText(spotlight.story || spotlight.title || "", 160);
 
         const title = `${spotlight.founderName}, Founder of ${spotlight.companyName} | Founder Spotlight | TechQuo News`;
-        const description = `${spotlight.title}. How ${spotlight.founderName} is building ${spotlight.companyName} in Africa: ${cleanSnippet}`;
+        const description = `${spotlight.title}. How ${spotlight.founderName} is building ${spotlight.companyName}: ${cleanSnippet}`;
         const image = spotlight.image || "/og-image.png";
         const canonicalUrl = `${baseUrl}/spotlight/${spotSlug}`;
 
@@ -277,7 +338,7 @@ async function startServer() {
           "@type": "Article",
           "headline": spotlight.title,
           "description": cleanSnippet,
-          "image": [image],
+          "image": [toAbsoluteUrl(image, baseUrl)],
           "datePublished": spotlight.createdAt || new Date().toISOString(),
           "dateModified": spotlight.updatedAt || spotlight.createdAt || new Date().toISOString(),
           "author": {
@@ -325,6 +386,11 @@ async function startServer() {
           robots: "index, follow",
           ogType: "article",
           schemaJson: schemaJsonLd,
+          publishedTime: spotlight.createdAt,
+          modifiedTime: spotlight.updatedAt || spotlight.createdAt,
+          section: "Founder Spotlight",
+          authorName: spotlight.author || "TechQuo Editorial Staff",
+          baseUrl,
         });
 
         return res.status(200).set({ "Content-Type": "text/html" }).end(template);
@@ -358,7 +424,7 @@ async function startServer() {
           "name": `${spot.founderName} - ${spot.companyName}`,
           "headline": spot.title,
           "url": `${baseUrl}/spotlight/${spot.slug || spot.id}`,
-          "image": spot.image
+          "image": toAbsoluteUrl(spot.image, baseUrl)
         }
       }));
 
@@ -386,6 +452,7 @@ async function startServer() {
         robots: "index, follow",
         ogType: "website",
         schemaJson: schemaJsonLd,
+        baseUrl,
       });
 
       return res.status(200).set({ "Content-Type": "text/html" }).end(template);
@@ -417,7 +484,7 @@ async function startServer() {
         const catSlug = normalizeCategorySlug(article.category || category);
         const artSlug = article.slug || slug;
         const title = `${article.title} | TechQuo News`;
-        const description = article.excerpt || "Read this article on TechQuo News";
+        const description = cleanPlainText(article.excerpt || article.content || "Read this article on TechQuo News", 160);
         const image = article.image || "/og-image.png";
         const canonicalUrl = `${baseUrl}/${catSlug}/${artSlug}`;
         const isPublished = article.status === "published" && article.visibility !== "private" && !article.deleted;
@@ -428,8 +495,8 @@ async function startServer() {
           "@context": "https://schema.org",
           "@type": "NewsArticle",
           "headline": article.title,
-          "description": article.excerpt,
-          "image": [image],
+          "description": description,
+          "image": [toAbsoluteUrl(image, baseUrl)],
           "datePublished": article.publishedAt || article.createdAt,
           "dateModified": article.updatedAt || article.publishedAt || article.createdAt,
           "author": {
@@ -460,6 +527,11 @@ async function startServer() {
           robots: isPublished ? "index, follow" : "noindex, nofollow",
           ogType: "article",
           schemaJson: schemaJsonLd,
+          publishedTime: article.publishedAt || article.createdAt,
+          modifiedTime: article.updatedAt || article.publishedAt || article.createdAt,
+          section: article.category,
+          authorName: article.author,
+          baseUrl,
         });
 
         return res.status(200).set({ "Content-Type": "text/html" }).end(template);

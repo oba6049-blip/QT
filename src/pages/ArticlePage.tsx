@@ -27,6 +27,7 @@ import { Article } from "../types";
 import { useAuth } from "../lib/AuthContext";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import SharePreviewModal from "../components/SharePreviewModal";
 
 export default function ArticlePage() {
   const { user } = useAuth();
@@ -34,6 +35,7 @@ export default function ArticlePage() {
   const [article, setArticle] = useState<Article | null>(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchArticle = async () => {
@@ -48,26 +50,8 @@ export default function ArticlePage() {
     window.scrollTo(0, 0);
   }, [id, slug]);
 
-  const handleShare = async () => {
-    if (!article) return;
-    
-    const shareData = {
-      title: article.title,
-      text: article.excerpt,
-      url: window.location.href,
-    };
-
-    try {
-      if (navigator.share) {
-        await navigator.share(shareData);
-      } else {
-        await navigator.clipboard.writeText(window.location.href);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-      }
-    } catch (err) {
-      console.error("Error sharing:", err);
-    }
+  const handleShare = () => {
+    setIsShareModalOpen(true);
   };
 
   if (loading) {
@@ -167,14 +151,31 @@ export default function ArticlePage() {
         <meta property="og:title" content={`${article.title} | TechQuo News`} />
         <meta property="og:description" content={article.excerpt} />
         <meta property="og:image" content={article.image} />
+        <meta property="og:image:secure_url" content={article.image} />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
         <meta property="og:url" content={canonicalUrl} />
         <meta property="og:type" content="article" />
         <meta property="og:site_name" content="TechQuo News" />
         <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="@TechQuoNews" />
         <meta name="twitter:title" content={`${article.title} | TechQuo News`} />
         <meta name="twitter:description" content={article.excerpt} />
         <meta name="twitter:image" content={article.image} />
       </Helmet>
+      
+      {/* Social Share & Link Preview Modal */}
+      <SharePreviewModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        title={article.title}
+        description={article.excerpt || ""}
+        url={canonicalUrl}
+        image={article.image || "https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&fit=crop&q=80&w=1200"}
+        type="article"
+        categoryOrFounder={article.category}
+        authorName={article.author}
+      />
       
       <main className="pt-32 pb-24">
         {/* Progress Bar */}
@@ -275,15 +276,11 @@ export default function ArticlePage() {
                 )}
                 <button 
                   onClick={handleShare}
-                  className="p-3 border border-slate-200 text-slate-400 hover:text-brand-accent hover:border-brand-accent transition-all rounded-full flex items-center gap-2 relative group"
-                  title="Share Story"
+                  className="px-4 py-2.5 bg-slate-50 border border-slate-200 text-slate-700 hover:text-brand-accent hover:border-brand-accent hover:bg-white transition-all rounded-full flex items-center gap-2 text-xs font-bold shadow-2xs group"
+                  title="Share Article & Preview Social Card"
                 >
-                  {copied ? <Check size={18} className="text-green-500" /> : <Share2 size={18} />}
-                  {copied && (
-                    <span className="absolute -top-10 left-1/2 -translate-x-1/2 bg-black text-white text-[10px] py-1 px-2 rounded whitespace-nowrap">
-                      Link Copied!
-                    </span>
-                  )}
+                  <Share2 size={15} className="text-brand-accent group-hover:scale-110 transition-transform" />
+                  <span>Share Story</span>
                 </button>
                 <button className="p-3 border border-slate-200 text-slate-400 hover:text-brand-accent hover:border-brand-accent transition-all rounded-full">
                   <Bookmark size={18} />

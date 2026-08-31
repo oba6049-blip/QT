@@ -24,6 +24,33 @@ export function getSiteName(): string {
   return "TechQuo News";
 }
 
+export function toAbsoluteUrl(url?: string, baseUrl: string = "https://techquonews.com"): string {
+  const cleanBase = (baseUrl || "https://techquonews.com").replace(/\/+$/, "");
+  if (!url) return `${cleanBase}/og-image.png`;
+  const trimmed = url.trim();
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+    return trimmed;
+  }
+  const cleanPath = trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
+  return `${cleanBase}${cleanPath}`;
+}
+
+export function cleanPlainText(text?: string, maxLength: number = 200): string {
+  if (!text) return "";
+  const cleaned = text
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (maxLength > 0 && cleaned.length > maxLength) {
+    return cleaned.slice(0, maxLength).trim() + "...";
+  }
+  return cleaned;
+}
+
 export function normalizeCategorySlug(category?: string): string {
   if (!category) return "technology";
   const clean = category
