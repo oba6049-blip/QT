@@ -83,6 +83,7 @@ export interface Expert {
 export interface SpotlightStory {
   id: string;
   _id?: string;
+  slug?: string;
   founderName: string;
   companyName: string;
   title: string;

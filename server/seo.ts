@@ -1,4 +1,4 @@
-import { getArticlesFromDb, getContributorsFromDb } from "./db";
+import { getArticlesFromDb, getContributorsFromDb, getSpotlightsFromDb } from "./db";
 
 // Helper to get configured site base URL without trailing slash
 export function getBaseUrl(req?: any): string {
@@ -181,13 +181,30 @@ export async function generateSitemapXml(baseUrl: string): Promise<string> {
   </url>`);
   }
 
-  // 5. Important Static Pages
+  // 5. Founder & Startup Spotlights
+  const allSpotlights = await getSpotlightsFromDb();
+  for (const spotlight of allSpotlights) {
+    const spotSlug = spotlight.slug || spotlight.id;
+    const spotUrl = `${cleanBase}/spotlight/${spotSlug}`;
+    const spotLastMod = formatIsoDate(spotlight.updatedAt || spotlight.createdAt || latestSiteDate);
+
+    urlEntries.push(`  <url>
+    <loc>${escapeXml(spotUrl)}</loc>
+    <lastmod>${spotLastMod}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>`);
+  }
+
+  // 6. Important Static & Hub Pages
   const staticPages = [
+    { path: "/spotlights", priority: "0.9", changefreq: "daily" },
+    { path: "/trending", priority: "0.8", changefreq: "daily" },
+    { path: "/contributors", priority: "0.7", changefreq: "weekly" },
+    { path: "/events", priority: "0.7", changefreq: "weekly" },
     { path: "/about", priority: "0.6", changefreq: "monthly" },
     { path: "/contact", priority: "0.6", changefreq: "monthly" },
     { path: "/partnerships", priority: "0.6", changefreq: "monthly" },
-    { path: "/contributors", priority: "0.7", changefreq: "weekly" },
-    { path: "/trending", priority: "0.8", changefreq: "daily" },
   ];
 
   for (const page of staticPages) {
@@ -218,6 +235,8 @@ export function generateRobotsTxt(baseUrl: string): string {
     "Allow: /events",
     "Allow: /career/",
     "Allow: /contributors/",
+    "Allow: /spotlights",
+    "Allow: /spotlight/",
     "Allow: /about",
     "Allow: /contact",
     "Allow: /partnerships",

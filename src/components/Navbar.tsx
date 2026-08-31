@@ -25,7 +25,7 @@ export default function Navbar() {
     { name: "Technology", path: "/category/Technology" },
     { name: "FinTech", path: "/category/FinTech" },
     { name: "Business", path: "/category/Business" },
-    { name: "Markets", path: "/category/Markets" },
+    { name: "Spotlights", path: "/spotlights" },
     { name: "Contributors", path: "/contributors" },
     { name: "Events", path: "/events" }
   ];

@@ -189,6 +189,7 @@ class FallbackDatabase {
       {
         _id: "spotlight_1",
         id: "1",
+        slug: "ngozi-adeleke-korapay-technologies",
         founderName: "Ngozi Adeleke",
         companyName: "KoraPay Technologies",
         title: "Pioneering Pan-African Cross-Border Settlement Rails",
@@ -204,6 +205,7 @@ class FallbackDatabase {
       {
         _id: "spotlight_2",
         id: "2",
+        slug: "tariq-mansour-heliogrid-energy",
         founderName: "Tariq Mansour",
         companyName: "HelioGrid Energy",
         title: "Decentralized Micro-Grids for Clean Industrial Energy",
@@ -419,7 +421,7 @@ async function seedMongoIfEmpty(database: Db) {
       }
     }
 
-    // Ensure all spotlights have postedByName and author attribution
+    // Ensure all spotlights have postedByName, author attribution, and SEO slugs
     const existingSpotlights = await database.collection("spotlights").find({}).toArray();
     for (const spot of existingSpotlights) {
       const spotUpdates: any = {};
@@ -431,6 +433,9 @@ async function seedMongoIfEmpty(database: Db) {
       }
       if (!spot.authorDesignation) {
         spotUpdates.authorDesignation = "Staff Reporter";
+      }
+      if (!spot.slug) {
+        spotUpdates.slug = generateSlug(`${spot.founderName || ""}-${spot.companyName || ""}`) || generateSlug(spot.title || `spotlight-${spot._id}`);
       }
       if (Object.keys(spotUpdates).length > 0) {
         await database.collection("spotlights").updateOne({ _id: spot._id }, { $set: spotUpdates });
@@ -1304,44 +1309,92 @@ export async function deleteExpertFromDb(id: string) {
 // SPOTLIGHTS API
 // -------------------------------------------------------------
 
+function enrichSpotlight(spotlight: any) {
+  if (!spotlight) return null;
+  const formatted = formatDoc(spotlight);
+  if (formatted && !formatted.slug) {
+    formatted.slug = generateSlug(`${formatted.founderName || ""}-${formatted.companyName || ""}`) || generateSlug(formatted.title || `spotlight-${formatted.id}`);
+  }
+  return formatted;
+}
+
 export async function getSpotlightsFromDb() {
   const database = await getDb();
   if (database) {
     try {
       const docs = await database.collection("spotlights").find({}).sort({ createdAt: -1 }).toArray();
-      return docs.map(formatDoc);
+      return docs.map(enrichSpotlight);
     } catch (e) {
       console.error("[MongoDB] Error fetching spotlights:", e);
     }
   }
-  return [...fallbackDb.spotlights];
+  return fallbackDb.spotlights.map(enrichSpotlight);
 }
 
-export async function getSpotlightByIdFromDb(id: string) {
+export async function getSpotlightByIdFromDb(idOrSlug: string) {
+  if (!idOrSlug) return null;
+  const cleanKey = idOrSlug.trim().toLowerCase();
   const database = await getDb();
+  let foundDoc: any = null;
+
   if (database) {
     try {
-      const objId = toObjectId(id);
-      const query = objId ? { $or: [{ _id: objId }, { id: id }] } : { $or: [{ id: id }, { _id: id as any }] };
+      const objId = toObjectId(idOrSlug);
+      const query: any = {
+        $or: [
+          { slug: { $regex: new RegExp(`^${cleanKey}$`, "i") } },
+          { id: idOrSlug },
+          { _id: idOrSlug as any },
+        ],
+      };
+      if (objId) {
+        query.$or.push({ _id: objId });
+      }
       const doc = await database.collection("spotlights").findOne(query);
-      if (doc) return formatDoc(doc);
+      if (doc) foundDoc = doc;
     } catch (e) {
-      console.error("[MongoDB] Error fetching spotlight by ID:", e);
+      console.error("[MongoDB] Error fetching spotlight by ID/slug:", e);
     }
   }
-  return fallbackDb.spotlights.find((s) => s.id === id || s._id === id) || null;
+
+  if (!foundDoc) {
+    const fallback = fallbackDb.spotlights.find(
+      (s) =>
+        (s.slug && s.slug.toLowerCase() === cleanKey) ||
+        s.id === idOrSlug ||
+        s._id === idOrSlug ||
+        (s.founderName && s.companyName && generateSlug(`${s.founderName}-${s.companyName}`) === cleanKey) ||
+        (s.title && generateSlug(s.title) === cleanKey)
+    );
+    if (fallback) foundDoc = fallback;
+  }
+
+  return enrichSpotlight(foundDoc);
 }
 
 export async function createSpotlightInDb(data: any) {
   const database = await getDb();
+  let baseSlug = generateSlug(data.slug || `${data.founderName || ""}-${data.companyName || ""}` || data.title || `spotlight-${Date.now()}`);
+  if (!baseSlug) baseSlug = `spotlight-${Date.now()}`;
+
+  // Ensure unique slug
+  let slug = baseSlug;
+  let counter = 1;
+  while (true) {
+    const existing = await getSpotlightByIdFromDb(slug);
+    if (!existing) break;
+    slug = `${baseSlug}-${counter++}`;
+  }
+
   const newSpotlight = {
     ...data,
-    createdAt: new Date(),
+    slug,
+    createdAt: new Date().toISOString(),
   };
 
   if (database) {
     try {
-      const res = await database.collection("spotlights").insertOne(newSpotlight);
+      const res = await database.collection("spotlights").insertOne(newSpotlight as any);
       return res.insertedId.toString();
     } catch (e) {
       console.error("[MongoDB] Error creating spotlight:", e);
@@ -1359,20 +1412,32 @@ export async function createSpotlightInDb(data: any) {
 
 export async function updateSpotlightInDb(id: string, data: any) {
   const database = await getDb();
+  const updates: any = { ...data };
+  delete updates._id;
+  delete updates.id;
+
+  if (updates.slug) {
+    updates.slug = generateSlug(updates.slug);
+  } else if (updates.founderName && updates.companyName && !data.slug) {
+    // Keep existing or generate clean slug
+    updates.slug = generateSlug(`${updates.founderName}-${updates.companyName}`);
+  }
+  updates.updatedAt = new Date().toISOString();
+
   if (database) {
     try {
       const objId = toObjectId(id);
-      const query = objId ? { $or: [{ _id: objId }, { id: id }] } : { id: id };
-      const res = await database.collection("spotlights").updateOne(query, { $set: data });
+      const query = objId ? { $or: [{ _id: objId }, { id: id }, { slug: id }] } : { $or: [{ id: id }, { slug: id }] };
+      const res = await database.collection("spotlights").updateOne(query, { $set: updates });
       return res.matchedCount > 0;
     } catch (e) {
       console.error("[MongoDB] Error updating spotlight:", e);
     }
   }
 
-  const idx = fallbackDb.spotlights.findIndex((s) => s.id === id || s._id === id);
+  const idx = fallbackDb.spotlights.findIndex((s) => s.id === id || s._id === id || s.slug === id);
   if (idx !== -1) {
-    fallbackDb.spotlights[idx] = { ...fallbackDb.spotlights[idx], ...data };
+    fallbackDb.spotlights[idx] = { ...fallbackDb.spotlights[idx], ...updates };
     return true;
   }
   return false;
@@ -1383,7 +1448,7 @@ export async function deleteSpotlightFromDb(id: string) {
   if (database) {
     try {
       const objId = toObjectId(id);
-      const query = objId ? { $or: [{ _id: objId }, { id: id }] } : { $or: [{ id: id }, { _id: id as any }] };
+      const query = objId ? { $or: [{ _id: objId }, { id: id }, { slug: id }] } : { $or: [{ id: id }, { _id: id as any }, { slug: id }] };
       const res = await database.collection("spotlights").deleteOne(query);
       return res.deletedCount > 0;
     } catch (e) {
@@ -1392,7 +1457,7 @@ export async function deleteSpotlightFromDb(id: string) {
   }
 
   const initialLen = fallbackDb.spotlights.length;
-  fallbackDb.spotlights = fallbackDb.spotlights.filter((s) => s.id !== id && s._id !== id);
+  fallbackDb.spotlights = fallbackDb.spotlights.filter((s) => s.id !== id && s._id !== id && s.slug !== id);
   return fallbackDb.spotlights.length < initialLen;
 }
 

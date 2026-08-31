@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "motion/react";
+import { Helmet } from "react-helmet-async";
 import { 
   ArrowLeft, 
   Quote, 
@@ -96,18 +97,94 @@ export default function SpotlightPage() {
     ? new Date(story.publishedAt || story.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
     : 'Recent Feature';
 
+  const cleanSnippet = (story.story || "")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 160);
+
+  const pageTitle = `${story.founderName}, Founder of ${story.companyName} | Founder Spotlight | TechQuo News`;
+  const pageDescription = `${story.title}. How ${story.founderName} is building ${story.companyName}: ${cleanSnippet}`;
+  const spotSlug = story.slug || story.id || id;
+  const canonicalUrl = `https://techquonews.com/spotlight/${spotSlug}`;
+
+  const schemaJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": story.title,
+    "description": cleanSnippet,
+    "image": [story.image],
+    "datePublished": story.publishedAt || story.createdAt || new Date().toISOString(),
+    "dateModified": story.updatedAt || story.publishedAt || story.createdAt || new Date().toISOString(),
+    "author": {
+      "@type": "Person",
+      "name": authorName,
+      "url": `https://techquonews.com${authorProfileLink}`
+    },
+    "about": [
+      {
+        "@type": "Person",
+        "name": story.founderName,
+        "jobTitle": "Founder & Visionary",
+        "worksFor": {
+          "@type": "Organization",
+          "name": story.companyName,
+          "url": story.link || undefined
+        }
+      },
+      {
+        "@type": "Organization",
+        "name": story.companyName,
+        "url": story.link || undefined
+      }
+    ],
+    "publisher": {
+      "@type": "Organization",
+      "name": publishedByName,
+      "url": "https://techquonews.com",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://techquonews.com/logo.png"
+      }
+    },
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": canonicalUrl
+    }
+  };
+
   return (
     <div className="min-h-screen bg-white">
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+        <link rel="canonical" href={canonicalUrl} />
+        <meta name="robots" content="index, follow" />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDescription} />
+        <meta property="og:image" content={story.image} />
+        <meta property="og:url" content={canonicalUrl} />
+        <meta property="og:type" content="article" />
+        <meta property="og:site_name" content="TechQuo News" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={pageDescription} />
+        <meta name="twitter:image" content={story.image} />
+        <script type="application/ld+json">
+          {JSON.stringify(schemaJsonLd)}
+        </script>
+      </Helmet>
+
       <Navbar />
       
       <main className="pt-32 pb-24">
         <div className="max-w-6xl mx-auto px-6">
           <Link 
-            to="/" 
+            to="/spotlights" 
             className="inline-flex items-center gap-2 text-slate-400 hover:text-brand-accent transition-colors mb-12 uppercase text-[10px] font-bold tracking-widest group"
           >
             <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
-            Back to Home
+            Back to Founder Spotlights
           </Link>
 
           <div className="grid lg:grid-cols-12 gap-16">

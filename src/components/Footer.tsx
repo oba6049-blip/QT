@@ -30,6 +30,7 @@ export default function Footer() {
             <h4 className="editorial-label text-white mb-8">Categories</h4>
             <ul className="space-y-4 text-[13px] font-medium tracking-tight">
               <li><Link to="/trending" className="hover:text-brand-accent transition-colors italic-editorial">Trending Now</Link></li>
+              <li><Link to="/spotlights" className="hover:text-brand-accent transition-colors italic-editorial">Founder Spotlights</Link></li>
               <li><Link to="/technology" className="hover:text-brand-accent transition-colors italic-editorial">Technology</Link></li>
               <li><Link to="/fintech" className="hover:text-brand-accent transition-colors italic-editorial">FinTech</Link></li>
               <li><Link to="/business" className="hover:text-brand-accent transition-colors italic-editorial">Business</Link></li>

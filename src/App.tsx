@@ -25,6 +25,7 @@ import EventsPage from "./pages/EventsPage";
 import TrendingPage from "./pages/TrendingPage";
 import ArticlePage from "./pages/ArticlePage";
 import SpotlightPage from "./pages/SpotlightPage";
+import SpotlightsArchivePage from "./pages/SpotlightsArchivePage";
 import ContributorProfilePage from "./pages/ContributorProfilePage";
 import ContributorsPage from "./pages/ContributorsPage";
 import AboutPage from "./pages/AboutPage";
@@ -94,7 +95,9 @@ function AppContent() {
         <Route path="/contributors" element={<ContributorsPage />} />
         <Route path="/events" element={<EventsPage />} />
         <Route path="/article/:id" element={<ArticlePage />} />
+        <Route path="/spotlights" element={<SpotlightsArchivePage />} />
         <Route path="/spotlight/:id" element={<SpotlightPage />} />
+        <Route path="/spotlights/:id" element={<SpotlightPage />} />
         {/* Canonical SEO article route: /:category/:slug */}
         <Route path="/:category/:slug" element={<ArticlePage />} />
         <Route path="/" element={

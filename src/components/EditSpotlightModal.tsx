@@ -192,6 +192,7 @@ export default function EditSpotlightModal({
         authorDesignation: formData.authorDesignation.trim() || 'Contributor',
         contributorId: formData.contributorId || undefined,
         authorImage: formData.authorImage || undefined,
+        slug: story.slug || undefined,
       };
 
       const ok = await updateSpotlightStory(story.id, updatedPayload);

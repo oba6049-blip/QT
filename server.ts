@@ -7,7 +7,9 @@ import { createApp } from "./server/app";
 import { 
   getArticleByIdFromDb, 
   getContributorByIdFromDb, 
-  getArticlesFromDb 
+  getArticlesFromDb,
+  getSpotlightByIdFromDb,
+  getSpotlightsFromDb
 } from "./server/db";
 import { 
   getBaseUrl, 
@@ -238,6 +240,155 @@ async function startServer() {
       }
 
       res.status(200).set({ "Content-Type": "text/html" }).end(template);
+    } catch (e) {
+      if (process.env.NODE_ENV !== "production" && vite) {
+        vite.ssrFixStacktrace(e as Error);
+      }
+      next(e);
+    }
+  });
+
+  // 3. Founder & Startup Spotlight Routes: /spotlight/:id and /spotlights
+  app.get(["/spotlight/:id", "/spotlights/:id"], async (req, res, next) => {
+    const { id } = req.params;
+    try {
+      let template = await loadTemplate(req.originalUrl);
+      const baseUrl = getBaseUrl(req);
+      const spotlight = await getSpotlightByIdFromDb(id);
+
+      if (spotlight) {
+        const spotSlug = spotlight.slug || spotlight.id || id;
+        const cleanSnippet = (spotlight.story || "")
+          .replace(/<[^>]*>/g, " ")
+          .replace(/\s+/g, " ")
+          .trim()
+          .slice(0, 160);
+
+        const title = `${spotlight.founderName}, Founder of ${spotlight.companyName} | Founder Spotlight | TechQuo News`;
+        const description = `${spotlight.title}. How ${spotlight.founderName} is building ${spotlight.companyName} in Africa: ${cleanSnippet}`;
+        const image = spotlight.image || "/og-image.png";
+        const canonicalUrl = `${baseUrl}/spotlight/${spotSlug}`;
+
+        const authorSlug = spotlight.contributor?.slug || 
+          (spotlight.author ? spotlight.author.toLowerCase().trim().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-') : 'editorial-staff');
+
+        const schemaJsonLd = {
+          "@context": "https://schema.org",
+          "@type": "Article",
+          "headline": spotlight.title,
+          "description": cleanSnippet,
+          "image": [image],
+          "datePublished": spotlight.createdAt || new Date().toISOString(),
+          "dateModified": spotlight.updatedAt || spotlight.createdAt || new Date().toISOString(),
+          "author": {
+            "@type": "Person",
+            "name": spotlight.author || "TechQuo Editorial Staff",
+            "url": `${baseUrl}/contributors/${authorSlug}`
+          },
+          "about": [
+            {
+              "@type": "Person",
+              "name": spotlight.founderName,
+              "jobTitle": "Founder & Visionary",
+              "worksFor": {
+                "@type": "Organization",
+                "name": spotlight.companyName,
+                "url": spotlight.link || undefined
+              }
+            },
+            {
+              "@type": "Organization",
+              "name": spotlight.companyName,
+              "url": spotlight.link || undefined
+            }
+          ],
+          "publisher": {
+            "@type": "Organization",
+            "name": "TechQuo News",
+            "url": baseUrl,
+            "logo": {
+              "@type": "ImageObject",
+              "url": `${baseUrl}/logo.png`
+            }
+          },
+          "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": canonicalUrl
+          }
+        };
+
+        template = injectMetaTags(template, {
+          title,
+          description,
+          image,
+          canonicalUrl,
+          robots: "index, follow",
+          ogType: "article",
+          schemaJson: schemaJsonLd,
+        });
+
+        return res.status(200).set({ "Content-Type": "text/html" }).end(template);
+      }
+
+      // If not found, pass to SPA fallback
+      next();
+    } catch (e) {
+      if (process.env.NODE_ENV !== "production" && vite) {
+        vite.ssrFixStacktrace(e as Error);
+      }
+      next(e);
+    }
+  });
+
+  app.get("/spotlights", async (req, res, next) => {
+    try {
+      let template = await loadTemplate(req.originalUrl);
+      const baseUrl = getBaseUrl(req);
+      const spotlights = await getSpotlightsFromDb();
+
+      const title = "Founder & Startup Spotlights | TechQuo News";
+      const description = "In-depth profiles, visionary journeys, and breakthrough startup narratives from African tech founders, builders, and enterprise innovators.";
+      const canonicalUrl = `${baseUrl}/spotlights`;
+
+      const itemListElements = spotlights.slice(0, 10).map((spot, index) => ({
+        "@type": "ListItem",
+        "position": index + 1,
+        "item": {
+          "@type": "Article",
+          "name": `${spot.founderName} - ${spot.companyName}`,
+          "headline": spot.title,
+          "url": `${baseUrl}/spotlight/${spot.slug || spot.id}`,
+          "image": spot.image
+        }
+      }));
+
+      const schemaJsonLd = {
+        "@context": "https://schema.org",
+        "@type": "CollectionPage",
+        "name": title,
+        "description": description,
+        "url": canonicalUrl,
+        "publisher": {
+          "@type": "Organization",
+          "name": "TechQuo News",
+          "url": baseUrl
+        },
+        "mainEntity": {
+          "@type": "ItemList",
+          "itemListElement": itemListElements
+        }
+      };
+
+      template = injectMetaTags(template, {
+        title,
+        description,
+        canonicalUrl,
+        robots: "index, follow",
+        ogType: "website",
+        schemaJson: schemaJsonLd,
+      });
+
+      return res.status(200).set({ "Content-Type": "text/html" }).end(template);
     } catch (e) {
       if (process.env.NODE_ENV !== "production" && vite) {
         vite.ssrFixStacktrace(e as Error);
