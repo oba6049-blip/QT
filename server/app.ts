@@ -65,6 +65,16 @@ dotenv.config();
 export function createApp(): express.Application {
   const app = express();
 
+  // Canonical domain redirect middleware: redirect non-www techquonews.com to www.techquonews.com
+  app.use((req, res, next) => {
+    const host = (req.headers.host || "").toLowerCase().split(":")[0];
+    if (host === "techquonews.com") {
+      const canonicalTarget = `https://www.techquonews.com${req.originalUrl}`;
+      return res.redirect(301, canonicalTarget);
+    }
+    next();
+  });
+
   // Middleware for JSON and form data (with 10mb limit for images)
   app.use(express.json({ limit: "10mb" }));
   app.use(express.urlencoded({ extended: true, limit: "10mb" }));
@@ -106,7 +116,7 @@ export function createApp(): express.Application {
       res.send(robots);
     } catch (e: any) {
       console.error("[SEO] Error generating robots.txt:", e);
-      res.status(500).send("User-agent: *\nDisallow: /admin/\nDisallow: /api/\n");
+      res.status(500).send("User-agent: *\nAllow: /\nAllow: /api/articles\nDisallow: /admin/\nDisallow: /api/auth/\n");
     }
   });
 
