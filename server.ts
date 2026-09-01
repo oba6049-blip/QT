@@ -39,7 +39,7 @@ function injectMetaTags(html: string, options: {
 }) {
   let output = html;
   const siteName = getSiteName();
-  const baseUrl = options.baseUrl || "https://techquonews.com";
+  const baseUrl = options.baseUrl || "https://www.techquonews.com";
   const title = options.title || `${siteName} | African Tech, FinTech & Startup Insights`;
   const description = options.description || "A premium digital media and news publishing platform for African tech, fintech, venture capital, and startup insights.";
   const rawImage = options.image || "/og-image.png";

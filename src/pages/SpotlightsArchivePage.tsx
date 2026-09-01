@@ -83,13 +83,13 @@ export default function SpotlightsArchivePage() {
           name="description" 
           content="In-depth profiles, visionary journeys, and breakthrough startup narratives from African tech founders and innovators." 
         />
-        <link rel="canonical" href="https://techquonews.com/spotlights" />
+        <link rel="canonical" href="https://www.techquonews.com/spotlights" />
         <meta property="og:title" content="Founder & Startup Spotlights | TechQuo News" />
         <meta 
           property="og:description" 
           content="In-depth profiles, visionary journeys, and breakthrough startup narratives from African tech founders and innovators." 
         />
-        <meta property="og:url" content="https://techquonews.com/spotlights" />
+        <meta property="og:url" content="https://www.techquonews.com/spotlights" />
         <meta property="og:type" content="website" />
         <script type="application/ld+json">
           {JSON.stringify({
@@ -97,7 +97,7 @@ export default function SpotlightsArchivePage() {
             "@type": "CollectionPage",
             "name": "Founder & Startup Spotlights | TechQuo News",
             "description": "In-depth profiles, visionary journeys, and breakthrough startup narratives from African tech founders and innovators.",
-            "url": "https://techquonews.com/spotlights",
+            "url": "https://www.techquonews.com/spotlights",
             "mainEntity": {
               "@type": "ItemList",
               "itemListElement": stories.slice(0, 20).map((s, index) => ({
@@ -107,7 +107,7 @@ export default function SpotlightsArchivePage() {
                   "@type": "Article",
                   "name": `${s.founderName} - ${s.companyName}`,
                   "headline": s.title,
-                  "url": `https://techquonews.com/spotlight/${s.slug || s.id}`,
+                  "url": `https://www.techquonews.com/spotlight/${s.slug || s.id}`,
                   "image": s.image
                 }
               }))

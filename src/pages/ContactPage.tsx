@@ -26,7 +26,7 @@ export default function ContactPage() {
     setSubmitted(true);
   };
 
-  const canonicalUrl = "https://techquonews.com/contact";
+  const canonicalUrl = "https://www.techquonews.com/contact";
 
   return (
     <div className="min-h-screen bg-white flex flex-col">

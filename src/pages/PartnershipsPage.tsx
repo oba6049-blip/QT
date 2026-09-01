@@ -19,7 +19,7 @@ export default function PartnershipsPage() {
     window.scrollTo(0, 0);
   }, []);
 
-  const canonicalUrl = "https://techquonews.com/partnerships";
+  const canonicalUrl = "https://www.techquonews.com/partnerships";
 
   return (
     <div className="min-h-screen bg-white flex flex-col">

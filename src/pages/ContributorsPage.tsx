@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { Contributor } from '../types';
 import { getContributors } from '../services/contributorService';
 import Navbar from '../components/Navbar';
@@ -14,7 +15,6 @@ export default function ContributorsPage() {
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    document.title = "Our Contributors & Authors | TechQuo News";
 
     const load = async () => {
       setLoading(true);
@@ -49,6 +49,15 @@ export default function ContributorsPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
+      <Helmet>
+        <title>Our Contributors & Authors | TechQuo News</title>
+        <meta name="description" content="Meet the journalists, venture investors, technologists, and policy leaders driving in-depth coverage across Africa's innovation economy." />
+        <link rel="canonical" href="https://www.techquonews.com/contributors" />
+        <meta property="og:title" content="Our Contributors & Authors | TechQuo News" />
+        <meta property="og:description" content="Meet the journalists, venture investors, technologists, and policy leaders driving in-depth coverage across Africa's innovation economy." />
+        <meta property="og:url" content="https://www.techquonews.com/contributors" />
+        <meta property="og:type" content="website" />
+      </Helmet>
       <Navbar />
 
       <main className="flex-1">

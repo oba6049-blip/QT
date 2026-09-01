@@ -1,5 +1,6 @@
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import { Helmet } from "react-helmet-async";
 import { EVENTS } from "../constants";
 import { motion } from "motion/react";
 import { Calendar, MapPin, ArrowUpRight, Clock, Users, Loader2 } from "lucide-react";
@@ -32,6 +33,15 @@ export default function EventsPage() {
 
   return (
     <>
+      <Helmet>
+        <title>Upcoming Technology Events & Summits | TechQuo News</title>
+        <meta name="description" content="Global meetups, high-stakes summits, and technical briefings for the African technology and venture ecosystem." />
+        <link rel="canonical" href="https://www.techquonews.com/events" />
+        <meta property="og:title" content="Upcoming Technology Events & Summits | TechQuo News" />
+        <meta property="og:description" content="Global meetups, high-stakes summits, and technical briefings for the African technology and venture ecosystem." />
+        <meta property="og:url" content="https://www.techquonews.com/events" />
+        <meta property="og:type" content="website" />
+      </Helmet>
       <Navbar />
       <main className="min-h-screen pt-32 pb-20 bg-white">
         <div className="max-w-7xl mx-auto px-6 md:px-12">

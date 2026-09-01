@@ -54,7 +54,7 @@ export default function Footer() {
               <li><Link to="/sitemap.xml" target="_blank" className="hover:text-brand-accent transition-colors">XML Sitemap</Link></li>
               <li><Link to="/robots.txt" target="_blank" className="hover:text-brand-accent transition-colors">Robots.txt</Link></li>
               <li><Link to="/events" className="hover:text-brand-accent transition-colors">Events Hub</Link></li>
-              <li><Link to="/admin/login" className="hover:text-brand-accent transition-colors">Editorial Login</Link></li>
+              <li><Link to="/trending" className="hover:text-brand-accent transition-colors">Top Stories</Link></li>
             </ul>
           </div>
         </div>

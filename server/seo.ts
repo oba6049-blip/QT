@@ -8,12 +8,18 @@ export function getBaseUrl(req?: any): string {
 
   if (!siteUrl || siteUrl.includes("localhost")) {
     // If running with real host header that is not localhost, use it if production-like,
-    // otherwise default to the official production URL
+    // otherwise default to the official production URL https://www.techquonews.com
     if (req && req.headers && req.headers.host && !req.headers.host.includes("localhost") && !req.headers.host.includes("127.0.0.1")) {
       const proto = req.headers["x-forwarded-proto"] || "https";
-      siteUrl = `${proto}://${req.headers.host}`;
+      const host = req.headers.host;
+      // If host is techquonews.com without www, canonicalize to www.techquonews.com
+      if (host === "techquonews.com") {
+        siteUrl = `${proto}://www.techquonews.com`;
+      } else {
+        siteUrl = `${proto}://${host}`;
+      }
     } else {
-      siteUrl = "https://techquonews.com";
+      siteUrl = "https://www.techquonews.com";
     }
   }
 
@@ -24,8 +30,8 @@ export function getSiteName(): string {
   return "TechQuo News";
 }
 
-export function toAbsoluteUrl(url?: string, baseUrl: string = "https://techquonews.com"): string {
-  const cleanBase = (baseUrl || "https://techquonews.com").replace(/\/+$/, "");
+export function toAbsoluteUrl(url?: string, baseUrl: string = "https://www.techquonews.com"): string {
+  const cleanBase = (baseUrl || "https://www.techquonews.com").replace(/\/+$/, "");
   if (!url) return `${cleanBase}/og-image.png`;
   const trimmed = url.trim();
   if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
@@ -270,6 +276,9 @@ export function generateRobotsTxt(baseUrl: string): string {
     "Allow: /trending",
     "Disallow: /admin/",
     "Disallow: /admin",
+    "Disallow: /auth/",
+    "Disallow: /auth/signin",
+    "Disallow: /auth/login",
     "Disallow: /dashboard/",
     "Disallow: /dashboard",
     "Disallow: /api/",

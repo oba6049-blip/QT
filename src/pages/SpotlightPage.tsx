@@ -106,7 +106,7 @@ export default function SpotlightPage() {
   const pageTitle = `${story.founderName}, Founder of ${story.companyName} | Founder Spotlight | TechQuo News`;
   const pageDescription = `${story.title}. How ${story.founderName} is building ${story.companyName}: ${cleanSnippet}`;
   const spotSlug = story.slug || story.id || id;
-  const canonicalUrl = `https://techquonews.com/spotlight/${spotSlug}`;
+  const canonicalUrl = `https://www.techquonews.com/spotlight/${spotSlug}`;
 
   const schemaJsonLd = {
     "@context": "https://schema.org",
@@ -119,7 +119,7 @@ export default function SpotlightPage() {
     "author": {
       "@type": "Person",
       "name": authorName,
-      "url": `https://techquonews.com${authorProfileLink}`
+      "url": `https://www.techquonews.com${authorProfileLink}`
     },
     "about": [
       {
@@ -141,10 +141,10 @@ export default function SpotlightPage() {
     "publisher": {
       "@type": "Organization",
       "name": publishedByName,
-      "url": "https://techquonews.com",
+      "url": "https://www.techquonews.com",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://techquonews.com/logo.png"
+        "url": "https://www.techquonews.com/logo.png"
       }
     },
     "mainEntityOfPage": {

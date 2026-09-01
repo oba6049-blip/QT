@@ -19,7 +19,7 @@ export default function AboutPage() {
     window.scrollTo(0, 0);
   }, []);
 
-  const canonicalUrl = "https://techquonews.com/about";
+  const canonicalUrl = "https://www.techquonews.com/about";
 
   return (
     <div className="min-h-screen bg-white flex flex-col">

@@ -103,7 +103,7 @@ export default function ArticlePage() {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
   const articleSlug = article.slug || article.id;
-  const canonicalUrl = `https://techquonews.com/${categorySlug || 'technology'}/${articleSlug}`;
+  const canonicalUrl = `https://www.techquonews.com/${categorySlug || 'technology'}/${articleSlug}`;
   
   const schemaJson = {
     "@context": "https://schema.org",
@@ -116,15 +116,15 @@ export default function ArticlePage() {
     "author": {
       "@type": "Person",
       "name": article.author,
-      "url": `https://techquonews.com${authorProfileLink}`
+      "url": `https://www.techquonews.com${authorProfileLink}`
     },
     "publisher": {
       "@type": "Organization",
       "name": publishedByName,
-      "url": "https://techquonews.com",
+      "url": "https://www.techquonews.com",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://techquonews.com/logo.png"
+        "url": "https://www.techquonews.com/logo.png"
       }
     },
     "mainEntityOfPage": {

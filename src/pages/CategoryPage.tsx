@@ -20,7 +20,7 @@ export default function CategoryPage() {
     .replace(/^-+|-+$/g, "");
 
   const displayCategory = cleanCategory.charAt(0).toUpperCase() + cleanCategory.slice(1);
-  const canonicalUrl = `https://techquonews.com/${cleanCategory}`;
+  const canonicalUrl = `https://www.techquonews.com/${cleanCategory}`;
   const pageTitle = `${displayCategory} News & Analysis | TechQuo News`;
   const pageDescription = `Read the latest ${displayCategory} news, tech market insights, startup rounds, and industry analysis on TechQuo News.`;
 

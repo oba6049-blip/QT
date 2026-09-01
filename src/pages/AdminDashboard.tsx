@@ -22,7 +22,7 @@ import EditArticleModal from "../components/EditArticleModal";
 import EditSpotlightModal from "../components/EditSpotlightModal";
 
 export default function AdminDashboard() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -41,6 +41,13 @@ export default function AdminDashboard() {
   const [editingSpotlight, setEditingSpotlight] = useState<SpotlightStory | null>(null);
   const [view, setView] = useState<DashboardTab>('create');
   const [changePasswordModalOpen, setChangePasswordModalOpen] = useState(false);
+
+  // Require authenticated session; redirect unauthenticated visits to /auth/signin
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate("/auth/signin", { replace: true });
+    }
+  }, [user, authLoading, navigate]);
 
   // Auto-switch to user's first permitted tab if current view is not accessible
   useEffect(() => {
@@ -679,6 +686,15 @@ export default function AdminDashboard() {
     }
   };
 
+  if (authLoading || !user) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-white">
+        <Loader2 className="w-8 h-8 animate-spin text-brand-accent mb-4" />
+        <p className="text-xs font-mono uppercase tracking-widest text-slate-400">Verifying Editorial Access...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 flex">
       {/* Sidebar */}
@@ -992,7 +1008,7 @@ export default function AdminDashboard() {
             <button 
               onClick={async () => {
                 await logout();
-                navigate("/admin/login");
+                navigate("/auth/signin");
               }}
               className="editorial-label text-red-500 hover:text-red-700 transition-colors flex items-center gap-1.5 px-3 py-1.5 rounded hover:bg-red-50 border border-transparent hover:border-red-100"
             >

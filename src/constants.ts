@@ -1,3 +1,5 @@
+export const SITE_CANONICAL_URL = "https://www.techquonews.com";
+
 export const ARTICLES: any[] = [];
 
 export const CATEGORIES = [

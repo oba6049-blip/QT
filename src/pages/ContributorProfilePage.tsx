@@ -142,7 +142,7 @@ export default function ContributorProfilePage() {
   })();
 
   const isIndexable = contributor.status === 'active' && articles.length > 0;
-  const canonicalUrl = `https://techquonews.com/contributors/${contributor.slug || slug}`;
+  const canonicalUrl = `https://www.techquonews.com/contributors/${contributor.slug || slug}`;
   const pageTitle = `${contributor.name} - ${contributor.title || 'Technology Contributor'} | TechQuo News`;
   const pageDescription = contributor.bio || `Read articles and insights by ${contributor.name}, a ${contributor.title || 'Technology Contributor'} at TechQuo News.`;
 
@@ -154,7 +154,7 @@ export default function ContributorProfilePage() {
     worksFor: {
       '@type': 'Organization',
       name: 'TechQuo News',
-      url: 'https://techquonews.com',
+      url: 'https://www.techquonews.com',
     },
     description: contributor.bio,
     image: profileImg,

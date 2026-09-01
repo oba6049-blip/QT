@@ -45,7 +45,7 @@ export default function SharePreviewModal({
 
   if (!isOpen) return null;
 
-  const fullUrl = url.startsWith("http") ? url : `https://techquonews.com${url.startsWith("/") ? url : `/${url}`}`;
+  const fullUrl = url.startsWith("http") ? url : `https://www.techquonews.com${url.startsWith("/") ? url : `/${url}`}`;
   const cleanExcerpt = description.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
   const truncatedExcerpt = cleanExcerpt.length > 140 ? `${cleanExcerpt.slice(0, 137)}...` : cleanExcerpt;
 
@@ -238,7 +238,7 @@ export default function SharePreviewModal({
                           }}
                         />
                         <div className="absolute bottom-2 left-2 bg-black/70 backdrop-blur-xs text-white text-[9px] font-mono px-1.5 py-0.5 rounded">
-                          techquonews.com
+                          www.techquonews.com
                         </div>
                       </div>
                       <div className="p-3 space-y-1 bg-[#F7F8FA]">
@@ -249,7 +249,7 @@ export default function SharePreviewModal({
                           {truncatedExcerpt}
                         </p>
                         <div className="pt-1 flex items-center justify-between text-[10px] text-slate-400">
-                          <span className="uppercase font-semibold">TECHQUONEWS.COM</span>
+                          <span className="uppercase font-semibold">WWW.TECHQUONEWS.COM</span>
                           <span>12:00 PM ✓✓</span>
                         </div>
                       </div>
@@ -284,11 +284,11 @@ export default function SharePreviewModal({
                           }}
                         />
                         <div className="absolute bottom-2 left-2 bg-black/80 text-white text-[10px] px-2 py-0.5 rounded font-mono">
-                          techquonews.com
+                          www.techquonews.com
                         </div>
                       </div>
                       <div className="p-3 bg-slate-50">
-                        <span className="text-[10px] text-slate-400 uppercase font-semibold block">techquonews.com</span>
+                        <span className="text-[10px] text-slate-400 uppercase font-semibold block">www.techquonews.com</span>
                         <h4 className="text-xs font-bold text-slate-900 leading-snug line-clamp-1">{title}</h4>
                         <p className="text-[11px] text-slate-500 line-clamp-1">{truncatedExcerpt}</p>
                       </div>
@@ -321,7 +321,7 @@ export default function SharePreviewModal({
                         />
                       </div>
                       <div className="p-3 bg-slate-50 border-t border-slate-100">
-                        <span className="text-[10px] text-slate-400 uppercase font-semibold block">techquonews.com</span>
+                        <span className="text-[10px] text-slate-400 uppercase font-semibold block">www.techquonews.com</span>
                         <h4 className="text-xs font-bold text-slate-900 leading-snug line-clamp-2">{title}</h4>
                         <p className="text-[11px] text-slate-500 line-clamp-1">{truncatedExcerpt}</p>
                       </div>

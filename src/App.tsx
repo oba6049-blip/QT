@@ -16,7 +16,7 @@ import Footer from "./components/Footer";
 import { AuthProvider, useAuth } from "./lib/AuthContext";
 import { useEffect } from "react";
 import { seedDatabase } from "./services/articleService";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminLoginPage from "./pages/AdminLoginPage";
@@ -46,13 +46,13 @@ function AppContent() {
     "@graph": [
       {
         "@type": "Organization",
-        "@id": "https://techquonews.com/#organization",
+        "@id": "https://www.techquonews.com/#organization",
         "name": "TechQuo News",
-        "url": "https://techquonews.com",
+        "url": "https://www.techquonews.com",
         "logo": {
           "@type": "ImageObject",
-          "@id": "https://techquonews.com/#logo",
-          "url": "https://techquonews.com/logo.png",
+          "@id": "https://www.techquonews.com/#logo",
+          "url": "https://www.techquonews.com/logo.png",
           "caption": "TechQuo News"
         },
         "sameAs": [
@@ -62,12 +62,12 @@ function AppContent() {
       },
       {
         "@type": "WebSite",
-        "@id": "https://techquonews.com/#website",
-        "url": "https://techquonews.com",
+        "@id": "https://www.techquonews.com/#website",
+        "url": "https://www.techquonews.com",
         "name": "TechQuo News",
         "description": "A premium digital media and news publishing platform for African tech, fintech, venture capital, and startup insights.",
         "publisher": {
-          "@id": "https://techquonews.com/#organization"
+          "@id": "https://www.techquonews.com/#organization"
         }
       }
     ]
@@ -76,10 +76,18 @@ function AppContent() {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
       <Routes>
+        {/* Dedicated secure Admin Sign-In route */}
+        <Route path="/auth/signin" element={<AdminLoginPage />} />
+        <Route path="/auth/login" element={<Navigate to="/auth/signin" replace />} />
+        <Route path="/auth" element={<Navigate to="/auth/signin" replace />} />
+        <Route path="/admin/login" element={<Navigate to="/auth/signin" replace />} />
+        <Route path="/login" element={<Navigate to="/auth/signin" replace />} />
+
+        {/* Protected Admin Dashboard routes */}
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/admin/*" element={<AdminDashboard />} />
-        <Route path="/admin/login" element={<AdminLoginPage />} />
-        <Route path="/login" element={<AdminLoginPage />} />
+
+        {/* Public Publication routes */}
         <Route path="/trending" element={<TrendingPage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/contact" element={<ContactPage />} />
@@ -105,11 +113,11 @@ function AppContent() {
             <Helmet>
               <title>TechQuo News | African Tech, FinTech & Startup Insights</title>
               <meta name="description" content="A premium digital media and news publishing platform for tech, business, and startup insights." />
-              <link rel="canonical" href="https://techquonews.com/" />
+              <link rel="canonical" href="https://www.techquonews.com/" />
               <meta name="robots" content="index, follow" />
               <meta property="og:title" content="TechQuo News | African Tech, FinTech & Startup Insights" />
               <meta property="og:description" content="A premium digital media and news publishing platform for tech, business, and startup insights." />
-              <meta property="og:url" content="https://techquonews.com/" />
+              <meta property="og:url" content="https://www.techquonews.com/" />
               <meta property="og:type" content="website" />
               <meta property="og:site_name" content="TechQuo News" />
               <meta name="twitter:card" content="summary_large_image" />

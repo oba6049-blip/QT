@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Lock, Mail, Eye, EyeOff, ArrowLeft, Loader2, AlertCircle, ShieldCheck } from "lucide-react";
+import { Helmet } from "react-helmet-async";
 import { useAuth } from "../lib/AuthContext";
 import { signInAdminWithEmail, ADMIN_EMAIL } from "../lib/auth";
 
@@ -56,6 +57,11 @@ export default function AdminLoginPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-between py-12 px-4 sm:px-6 lg:px-8">
+      <Helmet>
+        <title>Sign In | TechQuo News Editorial Portal</title>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
+
       {/* Top bar back link */}
       <div className="max-w-md w-full mx-auto">
         <Link 

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "motion/react";
+import { Helmet } from "react-helmet-async";
 import { getTrendingArticles } from "../services/articleService";
 import { Article } from "../types";
 import Navbar from "../components/Navbar";
@@ -24,6 +25,15 @@ export default function TrendingPage() {
 
   return (
     <>
+      <Helmet>
+        <title>Trending Tech News & Market Stories | TechQuo News</title>
+        <meta name="description" content="The stories currently dominating the conversation across African technology, fintech, venture capital, and startups." />
+        <link rel="canonical" href="https://www.techquonews.com/trending" />
+        <meta property="og:title" content="Trending Tech News & Market Stories | TechQuo News" />
+        <meta property="og:description" content="The stories currently dominating the conversation across African technology, fintech, venture capital, and startups." />
+        <meta property="og:url" content="https://www.techquonews.com/trending" />
+        <meta property="og:type" content="website" />
+      </Helmet>
       <Navbar />
       <main className="min-h-screen pt-32 pb-20 bg-white">
         <div className="max-w-7xl mx-auto px-6 md:px-12">

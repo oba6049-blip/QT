@@ -180,16 +180,7 @@ export default function Navbar() {
                   )}
                 </AnimatePresence>
               </div>
-            ) : (
-              <Link 
-                to="/admin/login"
-                className="bg-black text-white p-2.5 hover:bg-brand-accent transition-colors flex items-center justify-center rounded-sm"
-                aria-label="Admin Login"
-                title="Admin Login"
-              >
-                <Lock size={16} />
-              </Link>
-            )}
+            ) : null}
 
             <button 
               onClick={() => setShowMobileMenu(!showMobileMenu)}
@@ -253,36 +244,26 @@ export default function Navbar() {
                   ))}
                 </div>
 
-                <div className="mt-8 pt-6 border-t border-slate-100">
-                  {user ? (
-                    <div className="space-y-3">
-                      <Link
-                        to="/admin"
-                        onClick={() => setShowMobileMenu(false)}
-                        className="block text-xs font-bold uppercase tracking-widest text-brand-accent hover:underline"
-                      >
-                        Admin Dashboard
-                      </Link>
-                      <button
-                        onClick={() => {
-                          logout();
-                          setShowMobileMenu(false);
-                        }}
-                        className="block text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-black"
-                      >
-                        Sign Out
-                      </button>
-                    </div>
-                  ) : (
+                {user && (
+                  <div className="mt-8 pt-6 border-t border-slate-100 space-y-3">
                     <Link
-                      to="/admin/login"
+                      to="/admin"
                       onClick={() => setShowMobileMenu(false)}
-                      className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-900 hover:text-brand-accent"
+                      className="block text-xs font-bold uppercase tracking-widest text-brand-accent hover:underline"
                     >
-                      <Lock size={14} /> Admin Portal Login
+                      Admin Dashboard
                     </Link>
-                  )}
-                </div>
+                    <button
+                      onClick={() => {
+                        logout();
+                        setShowMobileMenu(false);
+                      }}
+                      className="block text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-black"
+                    >
+                      Sign Out
+                    </button>
+                  </div>
+                )}
 
                 <div className="mt-auto pt-8 border-t border-slate-100 italic font-serif text-slate-400 text-xs">
                   TechQuo News &copy; 2026. <br />
