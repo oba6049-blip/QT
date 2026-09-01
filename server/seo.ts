@@ -2,22 +2,26 @@ import { getArticlesFromDb, getContributorsFromDb, getSpotlightsFromDb } from ".
 
 // Helper to get configured site base URL without trailing slash
 export function getBaseUrl(req?: any): string {
-  if (req && req.headers) {
-    const host = req.headers["x-forwarded-host"] || req.headers.host;
-    if (host && !host.includes("localhost") && !host.includes("127.0.0.1")) {
-      const proto = req.headers["x-forwarded-proto"] || (req.secure ? "https" : "https");
-      if (host === "techquonews.com" || host === "www.techquonews.com") {
-        return "https://www.techquonews.com";
+  let siteUrl = process.env.SITE_URL || 
+                 process.env.NEXT_PUBLIC_SITE_URL || 
+                 process.env.VITE_SITE_URL;
+
+  if (!siteUrl || siteUrl.includes("localhost")) {
+    // If running with real host header that is not localhost, use it if production-like,
+    // otherwise default to the official production URL https://www.techquonews.com
+    if (req && req.headers && req.headers.host && !req.headers.host.includes("localhost") && !req.headers.host.includes("127.0.0.1")) {
+      const proto = req.headers["x-forwarded-proto"] || "https";
+      const host = req.headers.host;
+      // If host is techquonews.com without www, canonicalize to www.techquonews.com
+      if (host === "techquonews.com") {
+        siteUrl = `${proto}://www.techquonews.com`;
+      } else {
+        siteUrl = `${proto}://${host}`;
       }
-      return `${proto}://${host}`.replace(/\/+$/, "");
+    } else {
+      siteUrl = "https://www.techquonews.com";
     }
   }
-
-  const siteUrl = process.env.APP_URL ||
-                 process.env.SITE_URL || 
-                 process.env.NEXT_PUBLIC_SITE_URL || 
-                 process.env.VITE_SITE_URL ||
-                 "https://www.techquonews.com";
 
   return siteUrl.replace(/\/+$/, "");
 }

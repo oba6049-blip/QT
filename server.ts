@@ -42,102 +42,103 @@ function injectMetaTags(html: string, options: {
   const baseUrl = options.baseUrl || "https://www.techquonews.com";
   const title = options.title || `${siteName} | African Tech, FinTech & Startup Insights`;
   const description = options.description || "A premium digital media and news publishing platform for African tech, fintech, venture capital, and startup insights.";
-  const rawImage = options.image || "https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&fit=crop&q=80&w=1200";
+  const rawImage = options.image || "/og-image.png";
   const absoluteImage = toAbsoluteUrl(rawImage, baseUrl);
   const robots = options.robots || "index, follow";
   const ogType = options.ogType || "website";
   const canonicalUrl = options.canonicalUrl ? toAbsoluteUrl(options.canonicalUrl, baseUrl) : baseUrl;
 
   // Escape helpers for HTML attributes
-  const safeTitle = title.replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  const safeDescription = description.replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const safeTitle = title.replace(/"/g, "&quot;");
+  const safeDescription = description.replace(/"/g, "&quot;");
   const safeImage = absoluteImage.replace(/"/g, "&quot;");
 
-  // Determine Image MIME type
-  let imageMime = "image/jpeg";
-  if (safeImage.toLowerCase().endsWith(".png")) {
-    imageMime = "image/png";
-  } else if (safeImage.toLowerCase().endsWith(".webp")) {
-    imageMime = "image/webp";
-  } else if (safeImage.toLowerCase().endsWith(".gif")) {
-    imageMime = "image/gif";
+  // 1. Replace or update Title
+  output = output.replace(/<title>.*?<\/title>/i, `<title>${safeTitle}</title>`);
+  
+  // 2. Replace meta descriptions
+  if (output.includes('id="meta-description"')) {
+    output = output.replace(/id="meta-description" content=".*?"/i, `id="meta-description" content="${safeDescription}"`);
+  } else {
+    output = output.replace(/<meta name="description" content=".*?"/i, `<meta name="description" content="${safeDescription}"`);
+  }
+  
+  // 3. Replace OpenGraph tags with absolute values
+  if (output.includes('id="og-title"')) {
+    output = output.replace(/id="og-title" content=".*?"/i, `id="og-title" content="${safeTitle}"`);
+  }
+  if (output.includes('id="og-description"')) {
+    output = output.replace(/id="og-description" content=".*?"/i, `id="og-description" content="${safeDescription}"`);
+  }
+  if (output.includes('id="og-image"')) {
+    output = output.replace(/id="og-image" content=".*?"/i, `id="og-image" content="${safeImage}"`);
+  }
+  if (output.includes('property="og:type"')) {
+    output = output.replace(/property="og:type" content=".*?"/i, `property="og:type" content="${ogType}"`);
   }
 
-  // 1. Cleanly strip all existing title, description, canonical, robots, og:*, twitter:*, article:* tags and ld+json scripts
-  output = output.replace(/<title>[\s\S]*?<\/title>/gi, "");
-  output = output.replace(/<link[^>]*rel=["']canonical["'][^>]*>/gi, "");
-  output = output.replace(/<link[^>]*rel=["']image_src["'][^>]*>/gi, "");
-  output = output.replace(/<meta[^>]*name=["'](description|robots|twitter:[^"']+)["'][^>]*\/?>/gi, "");
-  output = output.replace(/<meta[^>]*property=["'](og:[^"']+|article:[^"']+)["'][^>]*\/?>/gi, "");
-  output = output.replace(/<meta[^>]*id=["'](meta-description|og-title|og-description|og-image|twitter-title|twitter-description|twitter-image)["'][^>]*\/?>/gi, "");
-  output = output.replace(/<script[^>]*type=["']application\/ld\+json["'][^>]*>[\s\S]*?<\/script>/gi, "");
-
-  // Ensure <html> has standard Open Graph RDFa prefix attributes
-  if (!output.includes('prefix=')) {
-    output = output.replace(/<html/i, '<html prefix="og: https://ogp.me/ns# fb: https://ogp.me/ns/fb# article: https://ogp.me/ns/article#"');
+  // 4. Replace Twitter tags with absolute values
+  if (output.includes('id="twitter-title"')) {
+    output = output.replace(/id="twitter-title" content=".*?"/i, `id="twitter-title" content="${safeTitle}"`);
+  }
+  if (output.includes('id="twitter-description"')) {
+    output = output.replace(/id="twitter-description" content=".*?"/i, `id="twitter-description" content="${safeDescription}"`);
+  }
+  if (output.includes('id="twitter-image"')) {
+    output = output.replace(/id="twitter-image" content=".*?"/i, `id="twitter-image" content="${safeImage}"`);
   }
 
-  // 2. Build standard, high-priority SEO & Social Crawler tags (WhatsApp, Facebook, LinkedIn, Twitter/X, Telegram, Slack, iMessage)
-  let headTags = `
-    <title>${safeTitle}</title>
-    <meta name="description" content="${safeDescription}" />
-    <meta name="robots" content="${robots}" />
-    <link rel="canonical" href="${canonicalUrl}" />
-    <link rel="image_src" href="${safeImage}" />
+  // 5. Build rich social preview head additions (WhatsApp, LinkedIn, Twitter, Facebook, Slack, iMessage)
+  let headAdditions = `\n  <!-- Search Engine Crawl Directives -->\n  <meta name="robots" content="${robots}" />`;
+  headAdditions += `\n  <link rel="canonical" href="${canonicalUrl}" />`;
+  headAdditions += `\n  <meta property="og:url" content="${canonicalUrl}" />`;
+  headAdditions += `\n  <meta property="og:site_name" content="${siteName}" />`;
+  
+  // High-Resolution WhatsApp & Facebook Image Metadata
+  headAdditions += `\n  <meta property="og:image:secure_url" content="${safeImage}" />`;
+  headAdditions += `\n  <meta property="og:image:width" content="1200" />`;
+  headAdditions += `\n  <meta property="og:image:height" content="630" />`;
+  headAdditions += `\n  <meta property="og:image:alt" content="${safeTitle}" />`;
+  
+  // Image MIME type detection
+  if (safeImage.endsWith(".png")) {
+    headAdditions += `\n  <meta property="og:image:type" content="image/png" />`;
+  } else if (safeImage.endsWith(".webp")) {
+    headAdditions += `\n  <meta property="og:image:type" content="image/webp" />`;
+  } else {
+    headAdditions += `\n  <meta property="og:image:type" content="image/jpeg" />`;
+  }
 
-    <!-- Open Graph / Facebook / WhatsApp / LinkedIn / Telegram / iMessage -->
-    <meta property="og:type" content="${ogType}" />
-    <meta property="og:site_name" content="${siteName}" />
-    <meta property="og:locale" content="en_US" />
-    <meta property="og:title" content="${safeTitle}" />
-    <meta property="og:description" content="${safeDescription}" />
-    <meta property="og:url" content="${canonicalUrl}" />
-    <meta property="og:image" content="${safeImage}" />
-    <meta property="og:image:secure_url" content="${safeImage}" />
-    <meta property="og:image:type" content="${imageMime}" />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="${safeTitle}" />
+  // Twitter Extra Card Directives
+  headAdditions += `\n  <meta name="twitter:site" content="@TechQuoNews" />`;
+  if (options.twitterCreator) {
+    headAdditions += `\n  <meta name="twitter:creator" content="${options.twitterCreator}" />`;
+  }
+  headAdditions += `\n  <meta name="twitter:image:alt" content="${safeTitle}" />`;
 
-    <!-- Twitter / X Card -->
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@TechQuoNews" />
-    ${options.twitterCreator ? `<meta name="twitter:creator" content="${options.twitterCreator}" />` : ""}
-    <meta name="twitter:title" content="${safeTitle}" />
-    <meta name="twitter:description" content="${safeDescription}" />
-    <meta name="twitter:image" content="${safeImage}" />
-    <meta name="twitter:image:src" content="${safeImage}" />
-    <meta name="twitter:image:alt" content="${safeTitle}" />`;
-
-  // 3. Article specific metadata
+  // Article Specific Open Graph Properties
   if (ogType === "article") {
     if (options.publishedTime) {
-      headTags += `\n    <meta property="article:published_time" content="${options.publishedTime}" />`;
+      headAdditions += `\n  <meta property="article:published_time" content="${options.publishedTime}" />`;
     }
     if (options.modifiedTime) {
-      headTags += `\n    <meta property="article:modified_time" content="${options.modifiedTime}" />`;
+      headAdditions += `\n  <meta property="article:modified_time" content="${options.modifiedTime}" />`;
     }
     if (options.section) {
-      headTags += `\n    <meta property="article:section" content="${options.section}" />`;
+      headAdditions += `\n  <meta property="article:section" content="${options.section}" />`;
     }
     if (options.authorName) {
-      headTags += `\n    <meta property="article:author" content="${options.authorName}" />`;
-      headTags += `\n    <meta name="author" content="${options.authorName}" />`;
+      headAdditions += `\n  <meta property="article:author" content="${options.authorName}" />`;
+      headAdditions += `\n  <meta name="author" content="${options.authorName}" />`;
     }
   }
 
-  // 4. Structured Data JSON-LD
+  // Structured Data JSON-LD
   if (options.schemaJson) {
-    headTags += `\n    <script type="application/ld+json">${JSON.stringify(options.schemaJson)}</script>`;
+    headAdditions += `\n  <script type="application/ld+json">${JSON.stringify(options.schemaJson)}</script>`;
   }
 
-  // Inject right after <head>
-  if (output.includes("<head>")) {
-    output = output.replace("<head>", `<head>${headTags}`);
-  } else {
-    output = output.replace("</head>", `${headTags}\n</head>`);
-  }
-
+  output = output.replace("</head>", `${headAdditions}\n</head>`);
   return output;
 }
 
@@ -153,7 +154,7 @@ async function startServer() {
   let vite: any;
   if (process.env.NODE_ENV !== "production") {
     vite = await createViteServer({
-      server: { middlewareMode: true, allowedHosts: true },
+      server: { middlewareMode: true },
       appType: "custom",
     });
     app.use(vite.middlewares);

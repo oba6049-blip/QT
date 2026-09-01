@@ -45,36 +45,28 @@ export default function SharePreviewModal({
 
   // Normalize image URL
   const resolvedImage = (() => {
-    if (!image || image === "/og-image.png") {
-      return "https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&fit=crop&q=80&w=1200";
+    if (!image) return "https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&fit=crop&q=80&w=1200";
+    if (image.startsWith("http://") || image.startsWith("https://") || image.startsWith("data:")) {
+      return image;
     }
-    const trimmed = image.trim();
-    if (trimmed.startsWith("http://") || trimmed.startsWith("https://") || trimmed.startsWith("data:")) {
-      return trimmed;
+    if (typeof window !== "undefined" && image.startsWith("/")) {
+      return `${window.location.origin}${image}`;
     }
-    if (typeof window !== "undefined" && trimmed.startsWith("/")) {
-      return `${window.location.origin}${trimmed}`;
-    }
-    return trimmed;
+    return image;
   })();
 
   useEffect(() => {
     if (isOpen) {
       setImgError(false);
-      setImgLoaded(true);
+      setImgLoaded(false);
     }
   }, [isOpen, resolvedImage]);
 
   if (!isOpen) return null;
 
-  const fullUrl = (() => {
-    if (!url) return typeof window !== "undefined" ? window.location.href : "https://www.techquonews.com";
-    if (url.startsWith("http://") || url.startsWith("https://")) return url;
-    if (typeof window !== "undefined" && window.location.origin) {
-      return `${window.location.origin}${url.startsWith("/") ? url : `/${url}`}`;
-    }
-    return `https://www.techquonews.com${url.startsWith("/") ? url : `/${url}`}`;
-  })();
+  const fullUrl = url.startsWith("http") 
+    ? url 
+    : `https://www.techquonews.com${url.startsWith("/") ? url : `/${url}`}`;
 
   const cleanExcerpt = (description || "")
     .replace(/<[^>]*>/g, " ")
