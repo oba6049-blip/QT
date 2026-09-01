@@ -61,69 +61,78 @@ export default function TrendingPage() {
              </div>
           ) : articles.length > 0 ? (
             <div className="grid gap-12 lg:gap-16">
-              {articles.map((article, idx) => (
-                <Link
-                  key={article.id}
-                  to={`/article/${article.id}`}
-                  className="block outline-none"
-                >
-                  <motion.div
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: idx * 0.1 }}
-                    className="group flex flex-col md:flex-row gap-8 md:gap-12 p-8 md:p-12 bg-white border border-slate-100 hover:border-brand-accent/30 transition-all cursor-pointer relative overflow-hidden"
+              {articles.map((article, idx) => {
+                const catSlug = (article.category || 'technology')
+                  .toLowerCase()
+                  .trim()
+                  .replace(/[^a-z0-9]+/g, '-')
+                  .replace(/^-+|-+$/g, '');
+                const artSlug = article.slug || (article.title ? article.title.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/[\s_-]+/g, '-') : article.id);
+
+                return (
+                  <Link
+                    key={article.id}
+                    to={`/${catSlug}/${artSlug}`}
+                    className="block outline-none"
                   >
-                    <div className="text-4xl md:text-6xl font-editorial font-black text-slate-100 group-hover:text-brand-accent/10 transition-colors absolute top-4 right-8">
-                      {String(idx + 1).padStart(2, '0')}
-                    </div>
-
-                    <div className="md:w-1/3 aspect-16/9 md:aspect-4/3 overflow-hidden bg-slate-100 shrink-0 rounded-md">
-                      <img 
-                        src={article.image} 
-                        alt={article.title} 
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" 
-                        referrerPolicy="no-referrer"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&fit=crop&q=80&w=800";
-                        }}
-                      />
-                    </div>
-
-                    <div className="flex-1 flex flex-col justify-center">
-                      <div className="flex items-center gap-4 mb-4">
-                          <div className="flex items-center gap-1.5 text-brand-accent">
-                              <Flame size={14} />
-                              <span className="editorial-label text-[10px]">Viral Story</span>
-                          </div>
-                          <span className="text-slate-300">•</span>
-                          <span className="editorial-label text-[10px] uppercase">{article.category}</span>
+                    <motion.div
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: idx * 0.1 }}
+                      className="group flex flex-col md:flex-row gap-8 md:gap-12 p-8 md:p-12 bg-white border border-slate-100 hover:border-brand-accent/30 transition-all cursor-pointer relative overflow-hidden"
+                    >
+                      <div className="text-4xl md:text-6xl font-editorial font-black text-slate-100 group-hover:text-brand-accent/10 transition-colors absolute top-4 right-8">
+                        {String(idx + 1).padStart(2, '0')}
                       </div>
 
-                      <h2 className="text-3xl md:text-4xl font-editorial font-bold mb-6 group-hover:underline leading-tight text-black">
-                        {article.title}
-                      </h2>
-                      
-                      <p className="text-slate-600 mb-8 text-base leading-relaxed line-clamp-2 max-w-2xl">
-                        {article.excerpt}
-                      </p>
-
-                      <div className="flex items-center justify-between mt-auto">
-                          <div className="flex items-center gap-3">
-                              <img src={`https://ui-avatars.com/api/?name=${article.author}`} alt={article.author} className="w-8 h-8 rounded-full" />
-                              <div>
-                                  <p className="text-xs font-bold text-black">{article.author}</p>
-                                  <p className="text-[10px] text-slate-400 uppercase tracking-widest">{article.date} • {article.authorDesignation || 'Contributor'}</p>
-                              </div>
-                          </div>
-                          <div className="hidden sm:flex items-center gap-2 text-brand-accent overflow-hidden group">
-                             <span className="text-[10px] font-bold uppercase tracking-widest translate-x-12 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-300">Read Entire Dispatch</span>
-                             <ArrowRight size={20} className="group-hover:translate-x-2 transition-transform" />
-                          </div>
+                      <div className="md:w-1/3 aspect-16/9 md:aspect-4/3 overflow-hidden bg-slate-100 shrink-0 rounded-md">
+                        <img 
+                          src={article.image} 
+                          alt={article.title} 
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" 
+                          referrerPolicy="no-referrer"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&fit=crop&q=80&w=800";
+                          }}
+                        />
                       </div>
-                    </div>
-                  </motion.div>
-                </Link>
-              ))}
+
+                      <div className="flex-1 flex flex-col justify-center">
+                        <div className="flex items-center gap-4 mb-4">
+                            <div className="flex items-center gap-1.5 text-brand-accent">
+                                <Flame size={14} />
+                                <span className="editorial-label text-[10px]">Viral Story</span>
+                            </div>
+                            <span className="text-slate-300">•</span>
+                            <span className="editorial-label text-[10px] uppercase">{article.category}</span>
+                        </div>
+
+                        <h2 className="text-3xl md:text-4xl font-editorial font-bold mb-6 group-hover:underline leading-tight text-black">
+                          {article.title}
+                        </h2>
+                        
+                        <p className="text-slate-600 mb-8 text-base leading-relaxed line-clamp-2 max-w-2xl">
+                          {article.excerpt}
+                        </p>
+
+                        <div className="flex items-center justify-between mt-auto">
+                            <div className="flex items-center gap-3">
+                                <img src={`https://ui-avatars.com/api/?name=${article.author}`} alt={article.author} className="w-8 h-8 rounded-full" />
+                                <div>
+                                    <p className="text-xs font-bold text-black">{article.author}</p>
+                                    <p className="text-[10px] text-slate-400 uppercase tracking-widest">{article.date} • {article.authorDesignation || 'Contributor'}</p>
+                                </div>
+                            </div>
+                            <div className="hidden sm:flex items-center gap-2 text-brand-accent overflow-hidden group">
+                               <span className="text-[10px] font-bold uppercase tracking-widest translate-x-12 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-300">Read Entire Dispatch</span>
+                               <ArrowRight size={20} className="group-hover:translate-x-2 transition-transform" />
+                            </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  </Link>
+                );
+              })}
             </div>
           ) : (
             <div className="py-20 text-center border border-dashed border-slate-200">

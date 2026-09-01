@@ -377,11 +377,18 @@ export default function Navbar() {
                         </span>
                         <div className="space-y-2">
                           {searchResults.articles.map((article) => {
-                            const articleId = article.slug || article.id || article._id;
+                            const catSlug = (article.category || 'technology')
+                              .toLowerCase()
+                              .trim()
+                              .replace(/[^a-z0-9]+/g, '-')
+                              .replace(/^-+|-+$/g, '');
+                            const artSlug = article.slug || (article.title ? article.title.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/[\s_-]+/g, '-') : (article.id || article._id));
+                            const articleLink = `/${catSlug}/${artSlug}`;
+
                             return (
                               <div
                                 key={article.id || article._id}
-                                onClick={() => handleSelectResult(`/article/${articleId}`)}
+                                onClick={() => handleSelectResult(articleLink)}
                                 className="p-3 rounded hover:bg-slate-50 border border-slate-100 hover:border-slate-200 cursor-pointer transition-colors flex gap-3 group"
                               >
                                 {article.image && (

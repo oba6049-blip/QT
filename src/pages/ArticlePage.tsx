@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
 import { motion } from "motion/react";
 import { Helmet } from "react-helmet-async";
 import ReactMarkdown from "react-markdown";
@@ -31,6 +31,8 @@ import SharePreviewModal from "../components/SharePreviewModal";
 
 export default function ArticlePage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
   const { id, category: routeCategory, slug } = useParams<{ id?: string; category?: string; slug?: string }>();
   const [article, setArticle] = useState<Article | null>(null);
   const [loading, setLoading] = useState(true);
@@ -49,6 +51,23 @@ export default function ArticlePage() {
     fetchArticle();
     window.scrollTo(0, 0);
   }, [id, slug]);
+
+  // Synchronize browser URL bar to canonical SEO URL: /:category/:slug
+  useEffect(() => {
+    if (article) {
+      const categorySlug = (article.category || routeCategory || "technology")
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+      const articleSlug = article.slug || (article.title ? article.title.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/[\s_-]+/g, '-') : article.id);
+      const canonicalPath = `/${categorySlug}/${articleSlug}`;
+
+      if (location.pathname !== canonicalPath && (location.pathname.startsWith('/article/') || !routeCategory || !slug || routeCategory !== categorySlug || slug !== articleSlug)) {
+        navigate(canonicalPath, { replace: true });
+      }
+    }
+  }, [article, location.pathname, routeCategory, slug, navigate]);
 
   const handleShare = () => {
     setIsShareModalOpen(true);

@@ -430,7 +430,14 @@ export default function ContributorProfilePage() {
               ) : (
                 <div className="space-y-6">
                   {articles.map((article) => {
-                    const articleId = article.slug || article.id || article._id;
+                    const catSlug = (article.category || 'technology')
+                      .toLowerCase()
+                      .trim()
+                      .replace(/[^a-z0-9]+/g, '-')
+                      .replace(/^-+|-+$/g, '');
+                    const artSlug = article.slug || (article.title ? article.title.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/[\s_-]+/g, '-') : (article.id || article._id));
+                    const articleLink = `/${catSlug}/${artSlug}`;
+
                     const dateFormatted = article.publishedAt
                       ? new Date(article.publishedAt).toLocaleDateString('en-US', {
                           month: 'short',
@@ -447,7 +454,7 @@ export default function ContributorProfilePage() {
                         {/* Article Thumbnail */}
                         {article.image && (
                           <Link
-                            to={`/article/${articleId}`}
+                            to={articleLink}
                             className="sm:w-48 sm:h-32 h-48 w-full shrink-0 overflow-hidden rounded-md bg-slate-100 relative block"
                           >
                             <img
@@ -476,7 +483,7 @@ export default function ContributorProfilePage() {
                             </div>
 
                             <h3 className="text-lg font-editorial font-bold text-slate-900 group-hover:text-brand-accent transition-colors leading-snug">
-                              <Link to={`/article/${articleId}`}>{article.title}</Link>
+                              <Link to={articleLink}>{article.title}</Link>
                             </h3>
 
                             <p className="text-xs text-slate-600 line-clamp-2 mt-1.5 leading-relaxed">
@@ -486,7 +493,7 @@ export default function ContributorProfilePage() {
 
                           <div className="pt-2 flex items-center justify-between">
                             <Link
-                              to={`/article/${articleId}`}
+                              to={articleLink}
                               className="text-xs font-bold uppercase tracking-wider text-black group-hover:text-brand-accent flex items-center gap-1 transition-colors"
                             >
                               Read Full Article <ChevronRight size={13} />

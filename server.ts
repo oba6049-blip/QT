@@ -241,69 +241,20 @@ async function startServer() {
     }
   });
 
-  // 2. Legacy /article/:id route
+  // 2. Legacy /article/:id route - 301 Redirect to canonical /:category/:slug
   app.get("/article/:id", async (req, res, next) => {
     const { id } = req.params;
     try {
-      let template = await loadTemplate(req.originalUrl);
-      const baseUrl = getBaseUrl(req);
       const article = await getArticleByIdFromDb(id);
 
       if (article) {
-        const catSlug = normalizeCategorySlug(article.category);
-        const artSlug = article.slug || article.id || id;
-        const title = `${article.title} | TechQuo News`;
-        const description = cleanPlainText(article.excerpt || article.content || "Read this article on TechQuo News", 160);
-        const image = article.image || "/og-image.png";
-        const canonicalUrl = `${baseUrl}/${catSlug}/${artSlug}`;
-        const isPublished = article.status === "published" && article.visibility !== "private" && !article.deleted;
-
-        const authorSlug = article.contributor?.slug || (article.author ? article.author.toLowerCase().trim().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-') : 'editorial-staff');
-
-        const schemaJsonLd = {
-          "@context": "https://schema.org",
-          "@type": "NewsArticle",
-          "headline": article.title,
-          "description": description,
-          "image": [toAbsoluteUrl(image, baseUrl)],
-          "datePublished": article.publishedAt || article.createdAt,
-          "dateModified": article.updatedAt || article.publishedAt || article.createdAt,
-          "author": {
-            "@type": "Person",
-            "name": article.author || "Editorial Staff",
-            "url": `${baseUrl}/contributors/${authorSlug}`
-          },
-          "publisher": {
-            "@type": "Organization",
-            "name": "TechQuo News",
-            "url": baseUrl,
-            "logo": {
-              "@type": "ImageObject",
-              "url": `${baseUrl}/logo.png`
-            }
-          },
-          "mainEntityOfPage": {
-            "@type": "WebPage",
-            "@id": canonicalUrl
-          }
-        };
-
-        template = injectMetaTags(template, {
-          title,
-          description,
-          image,
-          canonicalUrl,
-          robots: isPublished ? "index, follow" : "noindex, nofollow",
-          ogType: "article",
-          schemaJson: schemaJsonLd,
-          publishedTime: article.publishedAt || article.createdAt,
-          modifiedTime: article.updatedAt || article.publishedAt || article.createdAt,
-          section: article.category,
-          authorName: article.author,
-          baseUrl,
-        });
+        const catSlug = normalizeCategorySlug(article.category || "technology");
+        const artSlug = article.slug || (article.title ? generateSlug(article.title) : (article.id || id));
+        // Permanent 301 redirect to canonical SEO clean URL: /:category/:slug
+        return res.redirect(301, `/${catSlug}/${artSlug}`);
       }
 
+      let template = await loadTemplate(req.originalUrl);
       res.status(200).set({ "Content-Type": "text/html" }).end(template);
     } catch (e) {
       if (process.env.NODE_ENV !== "production" && vite) {
