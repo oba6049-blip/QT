@@ -106,14 +106,29 @@ export default function SpotlightPage() {
   const pageTitle = `${story.founderName}, Founder of ${story.companyName} | Founder Spotlight | TechQuo News`;
   const pageDescription = `${story.title}. How ${story.founderName} is building ${story.companyName}: ${cleanSnippet}`;
   const spotSlug = story.slug || story.id || id;
-  const canonicalUrl = `https://www.techquonews.com/spotlight/${spotSlug}`;
+  const canonicalUrl = typeof window !== 'undefined' && window.location.origin
+    ? `${window.location.origin}/spotlight/${spotSlug}`
+    : `https://www.techquonews.com/spotlight/${spotSlug}`;
+
+  const resolvedSpotlightImage = (() => {
+    const raw = story.image;
+    if (!raw || raw === "/og-image.png") {
+      return "https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&fit=crop&q=80&w=1200";
+    }
+    const trimmed = raw.trim();
+    if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) return trimmed;
+    if (typeof window !== "undefined" && window.location.origin) {
+      return `${window.location.origin}${trimmed.startsWith("/") ? trimmed : `/${trimmed}`}`;
+    }
+    return `https://www.techquonews.com${trimmed.startsWith("/") ? trimmed : `/${trimmed}`}`;
+  })();
 
   const schemaJsonLd = {
     "@context": "https://schema.org",
     "@type": "Article",
     "headline": story.title,
     "description": cleanSnippet,
-    "image": [story.image],
+    "image": [resolvedSpotlightImage],
     "datePublished": story.publishedAt || story.createdAt || new Date().toISOString(),
     "dateModified": story.updatedAt || story.publishedAt || story.createdAt || new Date().toISOString(),
     "author": {
@@ -162,8 +177,8 @@ export default function SpotlightPage() {
         <meta name="robots" content="index, follow" />
         <meta property="og:title" content={pageTitle} />
         <meta property="og:description" content={pageDescription} />
-        <meta property="og:image" content={story.image} />
-        <meta property="og:image:secure_url" content={story.image} />
+        <meta property="og:image" content={resolvedSpotlightImage} />
+        <meta property="og:image:secure_url" content={resolvedSpotlightImage} />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
         <meta property="og:url" content={canonicalUrl} />
@@ -173,7 +188,7 @@ export default function SpotlightPage() {
         <meta name="twitter:site" content="@TechQuoNews" />
         <meta name="twitter:title" content={pageTitle} />
         <meta name="twitter:description" content={pageDescription} />
-        <meta name="twitter:image" content={story.image} />
+        <meta name="twitter:image" content={resolvedSpotlightImage} />
         <script type="application/ld+json">
           {JSON.stringify(schemaJsonLd)}
         </script>
@@ -186,7 +201,7 @@ export default function SpotlightPage() {
         title={`${story.founderName} (${story.companyName}) — "${story.title}"`}
         description={pageDescription}
         url={canonicalUrl}
-        image={story.image || "https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&fit=crop&q=80&w=1200"}
+        image={resolvedSpotlightImage}
         type="spotlight"
         categoryOrFounder={story.founderName}
         authorName={authorName}

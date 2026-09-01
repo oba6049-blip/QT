@@ -103,14 +103,29 @@ export default function ArticlePage() {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
   const articleSlug = article.slug || article.id;
-  const canonicalUrl = `https://www.techquonews.com/${categorySlug || 'technology'}/${articleSlug}`;
+  const canonicalUrl = typeof window !== 'undefined' && window.location.origin
+    ? `${window.location.origin}/${categorySlug || 'technology'}/${articleSlug}`
+    : `https://www.techquonews.com/${categorySlug || 'technology'}/${articleSlug}`;
   
+  const resolvedArticleImage = (() => {
+    const raw = article.image;
+    if (!raw || raw === "/og-image.png") {
+      return "https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&fit=crop&q=80&w=1200";
+    }
+    const trimmed = raw.trim();
+    if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) return trimmed;
+    if (typeof window !== "undefined" && window.location.origin) {
+      return `${window.location.origin}${trimmed.startsWith("/") ? trimmed : `/${trimmed}`}`;
+    }
+    return `https://www.techquonews.com${trimmed.startsWith("/") ? trimmed : `/${trimmed}`}`;
+  })();
+
   const schemaJson = {
     "@context": "https://schema.org",
     "@type": "NewsArticle",
     "headline": article.title,
     "description": article.excerpt,
-    "image": [article.image],
+    "image": [resolvedArticleImage],
     "datePublished": article.publishedAt || article.createdAt || article.date,
     "dateModified": article.updatedAt || article.publishedAt || article.createdAt || article.date,
     "author": {
@@ -150,8 +165,8 @@ export default function ArticlePage() {
         <meta name="robots" content={article.status === 'published' ? 'index, follow' : 'noindex, nofollow'} />
         <meta property="og:title" content={`${article.title} | TechQuo News`} />
         <meta property="og:description" content={article.excerpt} />
-        <meta property="og:image" content={article.image} />
-        <meta property="og:image:secure_url" content={article.image} />
+        <meta property="og:image" content={resolvedArticleImage} />
+        <meta property="og:image:secure_url" content={resolvedArticleImage} />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
         <meta property="og:url" content={canonicalUrl} />
@@ -161,7 +176,7 @@ export default function ArticlePage() {
         <meta name="twitter:site" content="@TechQuoNews" />
         <meta name="twitter:title" content={`${article.title} | TechQuo News`} />
         <meta name="twitter:description" content={article.excerpt} />
-        <meta name="twitter:image" content={article.image} />
+        <meta name="twitter:image" content={resolvedArticleImage} />
       </Helmet>
       
       {/* Social Share & Link Preview Modal */}
@@ -171,7 +186,7 @@ export default function ArticlePage() {
         title={article.title}
         description={article.excerpt || ""}
         url={canonicalUrl}
-        image={article.image || "https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&fit=crop&q=80&w=1200"}
+        image={resolvedArticleImage}
         type="article"
         categoryOrFounder={article.category}
         authorName={article.author}
