@@ -66,21 +66,29 @@ function injectMetaTags(html: string, options: {
   // 1. Cleanly strip all existing title, description, canonical, robots, og:*, twitter:*, article:* tags and ld+json scripts
   output = output.replace(/<title>[\s\S]*?<\/title>/gi, "");
   output = output.replace(/<link[^>]*rel=["']canonical["'][^>]*>/gi, "");
+  output = output.replace(/<link[^>]*rel=["']image_src["'][^>]*>/gi, "");
   output = output.replace(/<meta[^>]*name=["'](description|robots|twitter:[^"']+)["'][^>]*\/?>/gi, "");
   output = output.replace(/<meta[^>]*property=["'](og:[^"']+|article:[^"']+)["'][^>]*\/?>/gi, "");
   output = output.replace(/<meta[^>]*id=["'](meta-description|og-title|og-description|og-image|twitter-title|twitter-description|twitter-image)["'][^>]*\/?>/gi, "");
   output = output.replace(/<script[^>]*type=["']application\/ld\+json["'][^>]*>[\s\S]*?<\/script>/gi, "");
 
-  // 2. Build standard, high-priority SEO & Social Crawler tags
+  // Ensure <html> has standard Open Graph RDFa prefix attributes
+  if (!output.includes('prefix=')) {
+    output = output.replace(/<html/i, '<html prefix="og: https://ogp.me/ns# fb: https://ogp.me/ns/fb# article: https://ogp.me/ns/article#"');
+  }
+
+  // 2. Build standard, high-priority SEO & Social Crawler tags (WhatsApp, Facebook, LinkedIn, Twitter/X, Telegram, Slack, iMessage)
   let headTags = `
     <title>${safeTitle}</title>
     <meta name="description" content="${safeDescription}" />
     <meta name="robots" content="${robots}" />
     <link rel="canonical" href="${canonicalUrl}" />
+    <link rel="image_src" href="${safeImage}" />
 
     <!-- Open Graph / Facebook / WhatsApp / LinkedIn / Telegram / iMessage -->
     <meta property="og:type" content="${ogType}" />
     <meta property="og:site_name" content="${siteName}" />
+    <meta property="og:locale" content="en_US" />
     <meta property="og:title" content="${safeTitle}" />
     <meta property="og:description" content="${safeDescription}" />
     <meta property="og:url" content="${canonicalUrl}" />
@@ -145,7 +153,7 @@ async function startServer() {
   let vite: any;
   if (process.env.NODE_ENV !== "production") {
     vite = await createViteServer({
-      server: { middlewareMode: true },
+      server: { middlewareMode: true, allowedHosts: true },
       appType: "custom",
     });
     app.use(vite.middlewares);

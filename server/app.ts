@@ -185,15 +185,20 @@ export function createApp(): express.Application {
   });
 
   // Helper function to serve media from MongoDB cache or authenticated AWS S3 fetch
-  async function serveMedia(key: string, res: express.Response) {
+  async function serveMedia(key: string, res: express.Response, isHead: boolean = false) {
     try {
       // 1. Check persistent database media store first
       const mediaDoc = await getMediaFromDb(key);
       if (mediaDoc && mediaDoc.data) {
         const buffer = Buffer.from(mediaDoc.data, "base64");
         res.set("Content-Type", mediaDoc.mimeType || "image/jpeg");
+        res.set("Content-Length", String(buffer.length));
         res.set("Cache-Control", "public, max-age=31536000, immutable");
         res.set("Access-Control-Allow-Origin", "*");
+        res.set("Accept-Ranges", "bytes");
+        if (isHead) {
+          return res.status(200).end();
+        }
         return res.send(buffer);
       }
 
@@ -201,8 +206,10 @@ export function createApp(): express.Application {
       const s3Data = await fetchFromS3(key);
       if (s3Data && s3Data.buffer) {
         res.set("Content-Type", s3Data.contentType || "image/jpeg");
+        res.set("Content-Length", String(s3Data.buffer.length));
         res.set("Cache-Control", "public, max-age=31536000, immutable");
         res.set("Access-Control-Allow-Origin", "*");
+        res.set("Accept-Ranges", "bytes");
         
         // Cache in DB for fast future loads
         saveMediaToDb({
@@ -213,6 +220,9 @@ export function createApp(): express.Application {
           size: s3Data.buffer.length,
         }).catch(err => console.warn("[Media Cache] Background save warning:", err));
 
+        if (isHead) {
+          return res.status(200).end();
+        }
         return res.send(s3Data.buffer);
       }
 
@@ -224,15 +234,25 @@ export function createApp(): express.Application {
     }
   }
 
-  // Media serving endpoints
+  // Media serving endpoints (GET and HEAD for social scrapers like WhatsApp & Facebook)
   app.get("/api/media/:folder/:filename", async (req, res) => {
     const key = `${req.params.folder}/${req.params.filename}`;
-    await serveMedia(key, res);
+    await serveMedia(key, res, false);
+  });
+
+  app.head("/api/media/:folder/:filename", async (req, res) => {
+    const key = `${req.params.folder}/${req.params.filename}`;
+    await serveMedia(key, res, true);
   });
 
   app.get("/api/media/:filename", async (req, res) => {
     const key = req.params.filename;
-    await serveMedia(key, res);
+    await serveMedia(key, res, false);
+  });
+
+  app.head("/api/media/:filename", async (req, res) => {
+    const key = req.params.filename;
+    await serveMedia(key, res, true);
   });
 
   // Direct media deletion endpoints
