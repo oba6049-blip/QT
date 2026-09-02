@@ -16,11 +16,11 @@ import {
   Globe, 
   Mail, 
   X,
-  Upload,
   Image as ImageIcon,
   Calendar
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import ContributorPhotoUploader from './ContributorPhotoUploader';
 
 const formatDateForInput = (dateVal?: string): string => {
   if (!dateVal) return '';
@@ -61,7 +61,6 @@ export default function ManageContributorsTab({ onNavigateCreate }: ManageContri
   // Edit modal state
   const [editingContributor, setEditingContributor] = useState<Contributor | null>(null);
   const [editLoading, setEditLoading] = useState(false);
-  const [editUploading, setEditUploading] = useState(false);
 
   // Delete modal state
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -91,41 +90,6 @@ export default function ManageContributorsTab({ onNavigateCreate }: ManageContri
 
   const handleCloseEdit = () => {
     setEditingContributor(null);
-  };
-
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !editingContributor) return;
-
-    if (file.size > 5 * 1024 * 1024) {
-      setError('Image file size must be less than 5MB');
-      return;
-    }
-
-    setEditUploading(true);
-    const reader = new FileReader();
-    reader.onload = async () => {
-      const base64Data = reader.result as string;
-      try {
-        const res = await fetch('/api/upload', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ image: base64Data, name: file.name, folder: 'contributors' }),
-        });
-
-        if (res.ok) {
-          const data = await res.json();
-          setEditingContributor((prev) => prev ? { ...prev, profileImage: data.url || base64Data } : null);
-        } else {
-          setEditingContributor((prev) => prev ? { ...prev, profileImage: base64Data } : null);
-        }
-      } catch (err) {
-        setEditingContributor((prev) => prev ? { ...prev, profileImage: base64Data } : null);
-      } finally {
-        setEditUploading(false);
-      }
-    };
-    reader.readAsDataURL(file);
   };
 
   const handleSaveEdit = async (e: React.FormEvent) => {
@@ -649,27 +613,18 @@ export default function ManageContributorsTab({ onNavigateCreate }: ManageContri
               {/* Photo */}
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                  Profile Photo URL
+                  Profile Photo (Stored in AWS S3 & MongoDB)
                 </label>
-                <div className="flex items-center gap-3">
-                  <input
-                    type="url"
-                    value={editingContributor.profileImage}
-                    onChange={(e) => setEditingContributor({ ...editingContributor, profileImage: e.target.value })}
-                    className="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded text-xs focus:outline-none focus:border-black"
-                  />
-                  <label className="cursor-pointer bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded text-xs font-bold shrink-0">
-                    <Upload size={12} className="inline mr-1" />
-                    Upload
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageUpload}
-                      disabled={editUploading}
-                      className="hidden"
-                    />
-                  </label>
-                </div>
+                <ContributorPhotoUploader
+                  value={editingContributor.profileImage || editingContributor.avatar || ''}
+                  onChange={(newUrl) => setEditingContributor({
+                    ...editingContributor,
+                    profileImage: newUrl,
+                    avatar: newUrl
+                  })}
+                  contributorName={editingContributor.name || 'contributor'}
+                  disabled={editLoading}
+                />
               </div>
 
               {/* Bio */}

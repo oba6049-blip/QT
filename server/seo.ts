@@ -67,6 +67,16 @@ export function normalizeCategorySlug(category?: string): string {
   return clean || "technology";
 }
 
+export function generateSlug(text?: string): string {
+  if (!text) return "";
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, "")
+    .replace(/[\s_-]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
 function escapeXml(unsafe: string): string {
   if (!unsafe) return "";
   return unsafe

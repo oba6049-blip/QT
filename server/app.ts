@@ -457,6 +457,28 @@ export function createApp(): express.Application {
       if (!name || !name.trim()) {
         return res.status(400).json({ error: "Contributor full name is required" });
       }
+
+      // Auto-upload base64 profile image to AWS S3 and MongoDB media collection
+      if (req.body.profileImage && typeof req.body.profileImage === "string" && req.body.profileImage.startsWith("data:image/")) {
+        const cleanName = (req.body.name || "contributor").replace(/[^a-zA-Z0-9_-]/g, "_");
+        const uploadResult = await uploadToS3({
+          fileData: req.body.profileImage,
+          fileName: `${cleanName}_avatar`,
+          folder: "contributors",
+        });
+        req.body.profileImage = uploadResult.url;
+        req.body.avatar = uploadResult.url;
+      } else if (req.body.avatar && typeof req.body.avatar === "string" && req.body.avatar.startsWith("data:image/")) {
+        const cleanName = (req.body.name || "contributor").replace(/[^a-zA-Z0-9_-]/g, "_");
+        const uploadResult = await uploadToS3({
+          fileData: req.body.avatar,
+          fileName: `${cleanName}_avatar`,
+          folder: "contributors",
+        });
+        req.body.profileImage = uploadResult.url;
+        req.body.avatar = uploadResult.url;
+      }
+
       const id = await createContributorInDb(req.body);
       const created = await getContributorByIdFromDb(id);
       res.status(201).json({ id, contributor: created, message: "Contributor created successfully" });
@@ -467,6 +489,39 @@ export function createApp(): express.Application {
 
   app.put("/api/contributors/:id", async (req, res) => {
     try {
+      const existing = await getContributorByIdFromDb(req.params.id);
+
+      // Auto-upload base64 profile image if updated
+      if (req.body.profileImage && typeof req.body.profileImage === "string" && req.body.profileImage.startsWith("data:image/")) {
+        const cleanName = (req.body.name || existing?.name || "contributor").replace(/[^a-zA-Z0-9_-]/g, "_");
+        const uploadResult = await uploadToS3({
+          fileData: req.body.profileImage,
+          fileName: `${cleanName}_avatar`,
+          folder: "contributors",
+        });
+        req.body.profileImage = uploadResult.url;
+        req.body.avatar = uploadResult.url;
+
+        // Clean up previous image key if replacing
+        if (existing) {
+          const oldKeys = extractMediaKeys([existing.profileImage, existing.avatar]);
+          for (const key of oldKeys) {
+            if (key !== uploadResult.key) {
+              deleteFromS3(key).catch((err) => console.warn(`[S3 Storage] Cleanup old avatar warning:`, err));
+            }
+          }
+        }
+      } else if (req.body.avatar && typeof req.body.avatar === "string" && req.body.avatar.startsWith("data:image/")) {
+        const cleanName = (req.body.name || existing?.name || "contributor").replace(/[^a-zA-Z0-9_-]/g, "_");
+        const uploadResult = await uploadToS3({
+          fileData: req.body.avatar,
+          fileName: `${cleanName}_avatar`,
+          folder: "contributors",
+        });
+        req.body.profileImage = uploadResult.url;
+        req.body.avatar = uploadResult.url;
+      }
+
       const success = await updateContributorInDb(req.params.id, req.body);
       if (!success) {
         return res.status(404).json({ error: "Contributor not found or no changes made" });

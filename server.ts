@@ -15,6 +15,7 @@ import {
   getBaseUrl, 
   getSiteName, 
   normalizeCategorySlug,
+  generateSlug,
   toAbsoluteUrl,
   cleanPlainText
 } from "./server/seo";

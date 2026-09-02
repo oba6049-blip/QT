@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Contributor } from '../types';
 import { createContributor } from '../services/contributorService';
-import { UserCheck, Upload, Image as ImageIcon, CheckCircle, AlertCircle, Loader2, Sparkles, ExternalLink, Link as LinkIcon, Plus, X } from 'lucide-react';
+import { UserCheck, CheckCircle, AlertCircle, Loader2, Sparkles, ExternalLink, Link as LinkIcon, Plus, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import ContributorPhotoUploader from './ContributorPhotoUploader';
 
 interface CreateContributorTabProps {
   onSuccess?: (contributor: Contributor) => void;
@@ -11,7 +12,6 @@ interface CreateContributorTabProps {
 
 export default function CreateContributorTab({ onSuccess, onNavigateManage }: CreateContributorTabProps) {
   const [loading, setLoading] = useState(false);
-  const [uploading, setUploading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [createdSlug, setCreatedSlug] = useState<string | null>(null);
@@ -68,48 +68,6 @@ export default function CreateContributorTab({ onSuccess, onNavigateManage }: Cr
 
   const handleRemoveExpertise = (tagToRemove: string) => {
     setExpertiseList(expertiseList.filter(tag => tag !== tagToRemove));
-  };
-
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (file.size > 5 * 1024 * 1024) {
-      setError('Image file size must be less than 5MB');
-      return;
-    }
-
-    setUploading(true);
-    setError(null);
-
-    const reader = new FileReader();
-    reader.onload = async () => {
-      const base64Data = reader.result as string;
-      try {
-        const res = await fetch('/api/upload', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ image: base64Data, name: file.name, folder: 'contributors' }),
-        });
-
-        if (res.ok) {
-          const data = await res.json();
-          setProfileImage(data.url || base64Data);
-        } else {
-          setProfileImage(base64Data);
-        }
-      } catch (err) {
-        console.warn('Upload fallback to data url:', err);
-        setProfileImage(base64Data);
-      } finally {
-        setUploading(false);
-      }
-    };
-    reader.onerror = () => {
-      setError('Failed to read image file');
-      setUploading(false);
-    };
-    reader.readAsDataURL(file);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -430,61 +388,14 @@ export default function CreateContributorTab({ onSuccess, onNavigateManage }: Cr
           {/* Profile Photo */}
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
-              Profile Photo
+              Profile Photo (Stored in AWS S3 & MongoDB)
             </label>
-            <div className="flex flex-col md:flex-row items-start md:items-center gap-6 p-4 bg-slate-50 border border-slate-200 rounded">
-              <div className="relative w-20 h-20 rounded-full overflow-hidden bg-slate-200 border-2 border-white shadow-sm shrink-0">
-                {profileImage ? (
-                  <img
-                    src={profileImage}
-                    alt="Preview"
-                    className="w-full h-full object-cover"
-                    referrerPolicy="no-referrer"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-slate-400">
-                    <ImageIcon size={28} />
-                  </div>
-                )}
-                {uploading && (
-                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-white">
-                    <Loader2 size={18} className="animate-spin" />
-                  </div>
-                )}
-              </div>
-
-              <div className="flex-1 space-y-2">
-                <div className="flex flex-wrap items-center gap-3">
-                  <label className="cursor-pointer inline-flex items-center gap-2 bg-black text-white px-4 py-2 rounded text-xs font-bold uppercase tracking-wider hover:bg-brand-accent transition-colors">
-                    <Upload size={14} />
-                    {uploading ? 'Uploading...' : 'Upload Avatar'}
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageUpload}
-                      disabled={uploading}
-                      className="hidden"
-                    />
-                  </label>
-                  {profileImage && (
-                    <button
-                      type="button"
-                      onClick={() => setProfileImage('')}
-                      className="text-xs text-rose-600 hover:text-rose-800 font-bold"
-                    >
-                      Remove
-                    </button>
-                  )}
-                </div>
-                <input
-                  type="url"
-                  value={profileImage}
-                  onChange={(e) => setProfileImage(e.target.value)}
-                  placeholder="Or paste direct image URL (https://...)"
-                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded text-xs focus:outline-none focus:border-black"
-                />
-              </div>
-            </div>
+            <ContributorPhotoUploader
+              value={profileImage}
+              onChange={setProfileImage}
+              contributorName={name || 'contributor'}
+              disabled={loading}
+            />
           </div>
 
           {/* Short Bio */}
@@ -647,7 +558,7 @@ export default function CreateContributorTab({ onSuccess, onNavigateManage }: Cr
         <div className="flex items-center justify-end gap-4 pt-4">
           <button
             type="submit"
-            disabled={loading || uploading}
+            disabled={loading}
             className="flex items-center gap-2 bg-black hover:bg-brand-accent text-white px-8 py-3.5 rounded-sm text-xs font-bold uppercase tracking-widest transition-colors shadow-sm disabled:opacity-50"
           >
             {loading ? (
