@@ -235,10 +235,11 @@ export default function ContactPage() {
                       onChange={(e) => setForm({ ...form, subject: e.target.value })}
                       className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded text-sm focus:outline-none focus:border-black disabled:opacity-60"
                     >
+                      <option value="Partnerships & Brand Sponsorships">Partnerships & Brand Sponsorships</option>
                       <option value="Editorial Tip">News Tip / Story Pitch</option>
                       <option value="Op-Ed Submission">Op-Ed & Contributor Submission</option>
-                      <option value="Advertising">Advertising & Brand Campaign</option>
-                      <option value="General">General Inquiry</option>
+                      <option value="Media Kit & Advertising Request">Media Kit & Advertising Request</option>
+                      <option value="General Inquiry">General Inquiry</option>
                     </select>
                   </div>
 

@@ -1494,52 +1494,75 @@ export async function addSubscriberToDb(email: string) {
 
 export async function getDbStatus() {
   const startTime = Date.now();
-  const database = await getDb();
-  const latencyMs = Date.now() - startTime;
-
-  let counts = { articles: 0, events: 0, experts: 0, spotlights: 0 };
-  let hostInfo = "in-memory-store";
-
-  if (currentMongoUri) {
-    const match = currentMongoUri.match(/@([^/?]+)/);
-    if (match && match[1]) {
-      hostInfo = match[1];
-    } else {
-      hostInfo = "custom-mongo-host";
-    }
-  }
-
-  if (database) {
+  try {
+    let database: Db | null = null;
     try {
-      const [articles, events, experts, spotlights] = await Promise.all([
-        database.collection("articles").countDocuments(),
-        database.collection("events").countDocuments(),
-        database.collection("experts").countDocuments(),
-        database.collection("spotlights").countDocuments(),
-      ]);
-      counts = { articles, events, experts, spotlights };
-    } catch (e) {
-      console.error("Error fetching db counts:", e);
+      database = await getDb();
+    } catch (dbErr) {
+      console.warn("[MongoDB Status] getDb exception:", dbErr);
     }
-  } else {
-    counts = {
-      articles: fallbackDb.articles.length,
-      events: fallbackDb.events.length,
-      experts: fallbackDb.experts.length,
-      spotlights: fallbackDb.spotlights.length,
+    const latencyMs = Date.now() - startTime;
+
+    let counts = { articles: 0, events: 0, experts: 0, spotlights: 0 };
+    let hostInfo = "in-memory-store";
+
+    if (currentMongoUri) {
+      const match = currentMongoUri.match(/@([^/?]+)/);
+      if (match && match[1]) {
+        hostInfo = match[1];
+      } else {
+        hostInfo = "custom-mongo-host";
+      }
+    }
+
+    if (database) {
+      try {
+        const [articles, events, experts, spotlights] = await Promise.all([
+          database.collection("articles").countDocuments().catch(() => 0),
+          database.collection("events").countDocuments().catch(() => 0),
+          database.collection("experts").countDocuments().catch(() => 0),
+          database.collection("spotlights").countDocuments().catch(() => 0),
+        ]);
+        counts = { articles, events, experts, spotlights };
+      } catch (e) {
+        console.error("Error fetching db counts:", e);
+      }
+    } else {
+      counts = {
+        articles: fallbackDb.articles.length,
+        events: fallbackDb.events.length,
+        experts: fallbackDb.experts.length,
+        spotlights: fallbackDb.spotlights.length,
+      };
+    }
+
+    return {
+      type: database ? "mongodb" : "in-memory-fallback",
+      connected: !!database,
+      connectionError: lastConnectError,
+      dbName: database ? database.databaseName : currentDbName,
+      host: hostInfo,
+      counts,
+      latencyMs,
+      timestamp: new Date().toISOString(),
+    };
+  } catch (err: any) {
+    return {
+      type: "in-memory-fallback",
+      connected: false,
+      connectionError: err?.message || "Status check error",
+      dbName: currentDbName,
+      host: "in-memory-store",
+      counts: {
+        articles: fallbackDb.articles.length,
+        events: fallbackDb.events.length,
+        experts: fallbackDb.experts.length,
+        spotlights: fallbackDb.spotlights.length,
+      },
+      latencyMs: Date.now() - startTime,
+      timestamp: new Date().toISOString(),
     };
   }
-
-  return {
-    type: database ? "mongodb" : "in-memory-fallback",
-    connected: !!database,
-    connectionError: lastConnectError,
-    dbName: database ? database.databaseName : currentDbName,
-    host: hostInfo,
-    counts,
-    latencyMs,
-    timestamp: new Date().toISOString(),
-  };
 }
 
 // -------------------------------------------------------------

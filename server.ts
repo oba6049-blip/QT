@@ -690,6 +690,11 @@ async function startServer() {
 
   // 4. Catch-all for Category, Static, Admin, and Homepage SSR Tag Injection
   app.get("*", async (req, res, next) => {
+    // Skip API routes so they are never served HTML
+    if (req.path.startsWith("/api/") || req.originalUrl.startsWith("/api/")) {
+      return res.status(404).json({ error: `API endpoint not found: ${req.method} ${req.path}` });
+    }
+
     // Skip static files with extensions
     if (req.originalUrl.includes(".") && !req.originalUrl.endsWith(".html")) {
       return next();

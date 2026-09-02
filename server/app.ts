@@ -128,18 +128,50 @@ export function createApp(): express.Application {
     res.json({ status: "ok", timestamp: new Date().toISOString() });
   });
 
-  app.get("/api/status", async (req, res) => {
+  app.get(["/api/status", "/api/status/", "/api/db-status"], async (req, res) => {
     try {
       const [dbStatus, s3Status] = await Promise.all([
-        getDbStatus(),
-        getS3Status()
+        getDbStatus().catch((err) => ({
+          type: "in-memory-fallback",
+          connected: false,
+          connectionError: err?.message || "DB query failed",
+          dbName: "techquo_news",
+          host: "in-memory-store",
+          counts: { articles: 0, events: 0, experts: 0, spotlights: 0 },
+          latencyMs: 0,
+          timestamp: new Date().toISOString(),
+        })),
+        getS3Status().catch((err) => ({
+          configured: false,
+          connected: false,
+          bucket: "",
+          region: "us-east-1",
+          status: "unreachable",
+          error: err?.message,
+        }))
       ]);
       res.json({
         ...dbStatus,
         storage: s3Status,
       });
     } catch (e: any) {
-      res.status(500).json({ error: e.message });
+      res.json({
+        type: "in-memory-fallback",
+        connected: false,
+        connectionError: e?.message || "Status endpoint error",
+        dbName: "techquo_news",
+        host: "in-memory-store",
+        counts: { articles: 0, events: 0, experts: 0, spotlights: 0 },
+        latencyMs: 0,
+        timestamp: new Date().toISOString(),
+        storage: {
+          configured: false,
+          connected: false,
+          bucket: "",
+          region: "us-east-1",
+          status: "unreachable",
+        },
+      });
     }
   });
 
@@ -968,6 +1000,11 @@ export function createApp(): express.Application {
     } catch (e: any) {
       res.status(400).json({ error: e.message });
     }
+  });
+
+  // Catch-all 404 for unhandled /api/* routes - guarantees JSON response instead of HTML
+  app.all("/api/*", (req, res) => {
+    res.status(404).json({ error: `API endpoint not found: ${req.method} ${req.path}` });
   });
 
   return app;

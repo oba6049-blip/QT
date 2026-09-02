@@ -109,6 +109,7 @@ export default function AdminDashboard() {
     type: string;
     dbName: string;
     host?: string;
+    connectionError?: string | null;
     counts?: { articles: number; events: number; experts: number; spotlights: number };
     latencyMs?: number;
     timestamp?: string;
@@ -127,7 +128,8 @@ export default function AdminDashboard() {
     setDbStatusLoading(true);
     try {
       const res = await fetch("/api/status");
-      if (res.ok) {
+      const contentType = res.headers.get("content-type") || "";
+      if (res.ok && contentType.includes("application/json")) {
         const data = await res.json();
         setDbStatus(data);
         if (data.storage?.bucket && !s3BucketInput) {
@@ -136,14 +138,31 @@ export default function AdminDashboard() {
         if (data.storage?.region && s3RegionInput === "us-east-1") {
           setS3RegionInput(data.storage.region);
         }
+      } else if (contentType.includes("application/json")) {
+        const errData = await res.json().catch(() => ({}));
+        setDbStatus({
+          connected: false,
+          type: "in-memory-fallback",
+          dbName: "disconnected",
+          host: "unavailable",
+          connectionError: errData.error || `Server status ${res.status}`,
+        });
+      } else {
+        setDbStatus({
+          connected: false,
+          type: "in-memory-fallback",
+          dbName: "disconnected",
+          host: "unavailable",
+          connectionError: "Database service starting up...",
+        });
       }
-    } catch (err) {
-      console.error("Failed to check db status:", err);
+    } catch (err: any) {
       setDbStatus({
         connected: false,
-        type: "error",
+        type: "in-memory-fallback",
         dbName: "disconnected",
         host: "unavailable",
+        connectionError: err?.message || "Connection unreachable",
       });
     } finally {
       setDbStatusLoading(false);
@@ -170,7 +189,7 @@ export default function AdminDashboard() {
         setS3SaveMessage({ text: "S3 bucket configuration updated successfully.", success: true });
         fetchDbStatus();
       } else {
-        const err = await res.json();
+        const err = await res.json().catch(() => ({ error: "Failed to update configuration." }));
         setS3SaveMessage({ text: err.error || "Failed to update configuration.", success: false });
       }
     } catch (err: any) {
@@ -192,7 +211,10 @@ export default function AdminDashboard() {
           region: s3RegionInput || dbStatus?.storage?.region,
         }),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({
+        success: false,
+        message: "Unexpected response from storage diagnostic endpoint.",
+      }));
       setS3TestResult(data);
     } catch (err: any) {
       setS3TestResult({
