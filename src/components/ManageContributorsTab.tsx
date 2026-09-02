@@ -454,281 +454,316 @@ export default function ManageContributorsTab({ onNavigateCreate }: ManageContri
 
       {/* Edit Contributor Modal */}
       {editingContributor && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white w-full max-w-2xl rounded-sm shadow-xl border border-slate-200 my-8">
-            <div className="flex items-center justify-between p-6 border-b border-slate-100">
-              <h3 className="text-lg font-editorial font-bold text-slate-900">
-                Edit Contributor: {editingContributor.name}
-              </h3>
+        <div 
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) handleCloseEdit();
+          }}
+        >
+          <div 
+            className="bg-white w-full max-w-2xl rounded-lg shadow-2xl border border-slate-200 flex flex-col max-h-[90vh] my-auto overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Sticky Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-slate-50/90 backdrop-blur-xs shrink-0">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-8 h-8 rounded-full overflow-hidden bg-slate-200 border border-slate-300 shrink-0">
+                  <img
+                    src={editingContributor.profileImage || editingContributor.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=100'}
+                    alt={editingContributor.name}
+                    className="w-full h-full object-cover"
+                    referrerPolicy="no-referrer"
+                  />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="text-base sm:text-lg font-editorial font-bold text-slate-900 truncate">
+                    Edit Contributor: {editingContributor.name}
+                  </h3>
+                  <p className="text-[11px] text-slate-500 truncate">
+                    Update profile, credentials, headshot, and public bio
+                  </p>
+                </div>
+              </div>
               <button
                 type="button"
                 onClick={handleCloseEdit}
-                className="text-slate-400 hover:text-black p-1 rounded transition-colors"
+                aria-label="Close edit modal"
+                className="text-slate-400 hover:text-black p-1.5 hover:bg-slate-200/60 rounded-full transition-colors shrink-0"
               >
                 <X size={18} />
               </button>
             </div>
 
-            <form onSubmit={handleSaveEdit} className="p-6 space-y-5">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                    Full Name
-                  </label>
-                  <input
-                    type="text"
-                    value={editingContributor.name}
-                    onChange={(e) => setEditingContributor({ ...editingContributor, name: e.target.value })}
-                    required
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded text-xs focus:outline-none focus:border-black font-medium"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                    Slug
-                  </label>
-                  <input
-                    type="text"
-                    value={editingContributor.slug}
-                    onChange={(e) => setEditingContributor({ ...editingContributor, slug: e.target.value })}
-                    required
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded text-xs focus:outline-none focus:border-black font-mono"
-                  />
-                </div>
-              </div>
-
-              {/* Contributor Classification (Staff vs Guest) */}
-              <div className="bg-slate-50 p-3.5 border border-slate-200 rounded-sm">
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-900 mb-1.5">
-                  Contributor Classification
-                </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <label
-                    onClick={() => {
-                      setEditingContributor({ ...editingContributor, contributorType: 'staff' });
-                    }}
-                    className={`p-3 border rounded cursor-pointer transition-all flex items-start gap-2.5 ${
-                      (editingContributor.contributorType || 'staff') === 'staff'
-                        ? 'border-indigo-600 bg-indigo-50/50 shadow-2xs ring-1 ring-indigo-600'
-                        : 'border-slate-200 bg-white hover:border-slate-300'
-                    }`}
-                  >
+            {/* Scrollable Form Body */}
+            <form onSubmit={handleSaveEdit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+              <div className="flex-1 overflow-y-auto p-6 space-y-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                      Full Name *
+                    </label>
                     <input
-                      type="radio"
-                      name="editContributorType"
-                      value="staff"
-                      checked={(editingContributor.contributorType || 'staff') === 'staff'}
-                      onChange={() => {}}
-                      className="mt-0.5 text-indigo-600 focus:ring-indigo-500"
+                      type="text"
+                      value={editingContributor.name}
+                      onChange={(e) => setEditingContributor({ ...editingContributor, name: e.target.value })}
+                      required
+                      placeholder="e.g. Nurudeen Adewale"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded text-xs focus:outline-none focus:border-black font-medium"
                     />
-                    <div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-xs font-bold text-slate-900">Staff Contributor</span>
-                        <span className="px-1.5 py-0.5 bg-indigo-100 text-indigo-800 text-[9px] font-bold rounded">
-                          In-House Staff
-                        </span>
-                      </div>
-                      <p className="text-[10px] text-slate-500 mt-0.5 leading-snug">
-                        TechQuo newsroom journalist or staff writer.
-                      </p>
-                    </div>
-                  </label>
+                  </div>
 
-                  <label
-                    onClick={() => {
-                      setEditingContributor({ ...editingContributor, contributorType: 'guest' });
-                    }}
-                    className={`p-3 border rounded cursor-pointer transition-all flex items-start gap-2.5 ${
-                      editingContributor.contributorType === 'guest'
-                        ? 'border-amber-600 bg-amber-50/50 shadow-2xs ring-1 ring-amber-600'
-                        : 'border-slate-200 bg-white hover:border-slate-300'
-                    }`}
-                  >
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                      Slug *
+                    </label>
                     <input
-                      type="radio"
-                      name="editContributorType"
-                      value="guest"
-                      checked={editingContributor.contributorType === 'guest'}
-                      onChange={() => {}}
-                      className="mt-0.5 text-amber-600 focus:ring-amber-500"
+                      type="text"
+                      value={editingContributor.slug}
+                      onChange={(e) => setEditingContributor({ ...editingContributor, slug: e.target.value })}
+                      required
+                      placeholder="e.g. nurudeen-adewale"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded text-xs focus:outline-none focus:border-black font-mono"
                     />
-                    <div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-xs font-bold text-slate-900">Guest Contributor</span>
-                        <span className="px-1.5 py-0.5 bg-amber-100 text-amber-800 text-[9px] font-bold rounded">
-                          External Writer
-                        </span>
+                  </div>
+                </div>
+
+                {/* Contributor Classification (Staff vs Guest) */}
+                <div className="bg-slate-50 p-3.5 border border-slate-200 rounded-sm">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-900 mb-1.5">
+                    Contributor Classification
+                  </label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <label
+                      onClick={() => {
+                        setEditingContributor({ ...editingContributor, contributorType: 'staff' });
+                      }}
+                      className={`p-3 border rounded cursor-pointer transition-all flex items-start gap-2.5 ${
+                        (editingContributor.contributorType || 'staff') === 'staff'
+                          ? 'border-indigo-600 bg-indigo-50/50 shadow-2xs ring-1 ring-indigo-600'
+                          : 'border-slate-200 bg-white hover:border-slate-300'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="editContributorType"
+                        value="staff"
+                        checked={(editingContributor.contributorType || 'staff') === 'staff'}
+                        onChange={() => {}}
+                        className="mt-0.5 text-indigo-600 focus:ring-indigo-500"
+                      />
+                      <div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs font-bold text-slate-900">Staff Contributor</span>
+                          <span className="px-1.5 py-0.5 bg-indigo-100 text-indigo-800 text-[9px] font-bold rounded">
+                            In-House Staff
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-slate-500 mt-0.5 leading-snug">
+                          TechQuo newsroom journalist or staff writer.
+                        </p>
                       </div>
-                      <p className="text-[10px] text-slate-500 mt-0.5 leading-snug">
-                        Guest analyst, industry expert, or submitted opinion piece.
-                      </p>
-                    </div>
-                  </label>
-                </div>
-              </div>
+                    </label>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <label
+                      onClick={() => {
+                        setEditingContributor({ ...editingContributor, contributorType: 'guest' });
+                      }}
+                      className={`p-3 border rounded cursor-pointer transition-all flex items-start gap-2.5 ${
+                        editingContributor.contributorType === 'guest'
+                          ? 'border-amber-600 bg-amber-50/50 shadow-2xs ring-1 ring-amber-600'
+                          : 'border-slate-200 bg-white hover:border-slate-300'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="editContributorType"
+                        value="guest"
+                        checked={editingContributor.contributorType === 'guest'}
+                        onChange={() => {}}
+                        className="mt-0.5 text-amber-600 focus:ring-amber-500"
+                      />
+                      <div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs font-bold text-slate-900">Guest Contributor</span>
+                          <span className="px-1.5 py-0.5 bg-amber-100 text-amber-800 text-[9px] font-bold rounded">
+                            External Writer
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-slate-500 mt-0.5 leading-snug">
+                          Guest analyst, industry expert, or submitted opinion piece.
+                        </p>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                      Designation / Title
+                    </label>
+                    <input
+                      type="text"
+                      value={editingContributor.title}
+                      onChange={(e) => setEditingContributor({ ...editingContributor, title: e.target.value })}
+                      required
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded text-xs focus:outline-none focus:border-black"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1 flex items-center justify-between">
+                      <span>Joined Date</span>
+                      <span className="text-[10px] text-slate-400 font-normal normal-case">Backdate</span>
+                    </label>
+                    <input
+                      type="date"
+                      value={formatDateForInput(editingContributor.joinedAt)}
+                      onChange={(e) => setEditingContributor({ ...editingContributor, joinedAt: e.target.value })}
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded text-xs focus:outline-none focus:border-black font-medium"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                      Status
+                    </label>
+                    <select
+                      value={editingContributor.status}
+                      onChange={(e) => setEditingContributor({ ...editingContributor, status: e.target.value as 'active' | 'inactive' })}
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded text-xs focus:outline-none focus:border-black"
+                    >
+                      <option value="active">Active</option>
+                      <option value="inactive">Inactive</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Photo */}
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                    Designation / Title
+                    Profile Photo (Stored in AWS S3 & MongoDB)
                   </label>
-                  <input
-                    type="text"
-                    value={editingContributor.title}
-                    onChange={(e) => setEditingContributor({ ...editingContributor, title: e.target.value })}
+                  <ContributorPhotoUploader
+                    value={editingContributor.profileImage || editingContributor.avatar || ''}
+                    onChange={(newUrl) => setEditingContributor({
+                      ...editingContributor,
+                      profileImage: newUrl,
+                      avatar: newUrl
+                    })}
+                    contributorName={editingContributor.name || 'contributor'}
+                    disabled={editLoading}
+                  />
+                </div>
+
+                {/* Bio */}
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                    Short Biography
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={editingContributor.bio}
+                    onChange={(e) => setEditingContributor({ ...editingContributor, bio: e.target.value })}
                     required
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded text-xs focus:outline-none focus:border-black"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded text-xs focus:outline-none focus:border-black leading-relaxed"
                   />
                 </div>
 
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1 flex items-center justify-between">
-                    <span>Joined Date</span>
-                    <span className="text-[10px] text-slate-400 font-normal normal-case">Backdate</span>
-                  </label>
-                  <input
-                    type="date"
-                    value={formatDateForInput(editingContributor.joinedAt)}
-                    onChange={(e) => setEditingContributor({ ...editingContributor, joinedAt: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded text-xs focus:outline-none focus:border-black font-medium"
-                  />
-                </div>
-
+                {/* Long Bio */}
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                    Status
+                    Extended Biography (Optional)
                   </label>
-                  <select
-                    value={editingContributor.status}
-                    onChange={(e) => setEditingContributor({ ...editingContributor, status: e.target.value as 'active' | 'inactive' })}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded text-xs focus:outline-none focus:border-black"
+                  <textarea
+                    rows={4}
+                    value={editingContributor.longBio || ''}
+                    onChange={(e) => setEditingContributor({ ...editingContributor, longBio: e.target.value })}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded text-xs focus:outline-none focus:border-black leading-relaxed"
+                  />
+                </div>
+
+                {/* Socials */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-slate-100">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">LinkedIn URL</label>
+                    <input
+                      type="url"
+                      value={editingContributor.socialLinks?.linkedin || ''}
+                      onChange={(e) =>
+                        setEditingContributor({
+                          ...editingContributor,
+                          socialLinks: { ...editingContributor.socialLinks, linkedin: e.target.value },
+                        })
+                      }
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded text-xs focus:outline-none focus:border-black"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">X / Twitter URL</label>
+                    <input
+                      type="url"
+                      value={editingContributor.socialLinks?.twitter || ''}
+                      onChange={(e) =>
+                        setEditingContributor({
+                          ...editingContributor,
+                          socialLinks: { ...editingContributor.socialLinks, twitter: e.target.value },
+                        })
+                      }
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded text-xs focus:outline-none focus:border-black"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Website URL</label>
+                    <input
+                      type="url"
+                      value={editingContributor.socialLinks?.website || ''}
+                      onChange={(e) =>
+                        setEditingContributor({
+                          ...editingContributor,
+                          socialLinks: { ...editingContributor.socialLinks, website: e.target.value },
+                        })
+                      }
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded text-xs focus:outline-none focus:border-black"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Email</label>
+                    <input
+                      type="email"
+                      value={editingContributor.email || ''}
+                      onChange={(e) => setEditingContributor({ ...editingContributor, email: e.target.value })}
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded text-xs focus:outline-none focus:border-black"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Sticky Actions Footer */}
+              <div className="flex items-center justify-between gap-3 px-6 py-3.5 border-t border-slate-200 bg-slate-50/95 backdrop-blur-xs shrink-0">
+                <span className="text-[11px] text-slate-500 font-medium">
+                  Editing profile details
+                </span>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={handleCloseEdit}
+                    className="px-4 py-2 text-xs font-bold uppercase tracking-wider text-slate-600 hover:text-black rounded transition-colors"
                   >
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                  </select>
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={editLoading}
+                    className="bg-black hover:bg-brand-accent text-white px-6 py-2.5 rounded text-xs font-bold uppercase tracking-wider transition-colors disabled:opacity-50 flex items-center gap-1.5 shadow-sm"
+                  >
+                    {editLoading ? <Loader2 size={14} className="animate-spin" /> : null}
+                    Save Changes
+                  </button>
                 </div>
-              </div>
-
-              {/* Photo */}
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                  Profile Photo (Stored in AWS S3 & MongoDB)
-                </label>
-                <ContributorPhotoUploader
-                  value={editingContributor.profileImage || editingContributor.avatar || ''}
-                  onChange={(newUrl) => setEditingContributor({
-                    ...editingContributor,
-                    profileImage: newUrl,
-                    avatar: newUrl
-                  })}
-                  contributorName={editingContributor.name || 'contributor'}
-                  disabled={editLoading}
-                />
-              </div>
-
-              {/* Bio */}
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                  Short Biography
-                </label>
-                <textarea
-                  rows={3}
-                  value={editingContributor.bio}
-                  onChange={(e) => setEditingContributor({ ...editingContributor, bio: e.target.value })}
-                  required
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded text-xs focus:outline-none focus:border-black leading-relaxed"
-                />
-              </div>
-
-              {/* Long Bio */}
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                  Extended Biography (Optional)
-                </label>
-                <textarea
-                  rows={4}
-                  value={editingContributor.longBio || ''}
-                  onChange={(e) => setEditingContributor({ ...editingContributor, longBio: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded text-xs focus:outline-none focus:border-black leading-relaxed"
-                />
-              </div>
-
-              {/* Socials */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-slate-100">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">LinkedIn URL</label>
-                  <input
-                    type="url"
-                    value={editingContributor.socialLinks?.linkedin || ''}
-                    onChange={(e) =>
-                      setEditingContributor({
-                        ...editingContributor,
-                        socialLinks: { ...editingContributor.socialLinks, linkedin: e.target.value },
-                      })
-                    }
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded text-xs focus:outline-none focus:border-black"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">X / Twitter URL</label>
-                  <input
-                    type="url"
-                    value={editingContributor.socialLinks?.twitter || ''}
-                    onChange={(e) =>
-                      setEditingContributor({
-                        ...editingContributor,
-                        socialLinks: { ...editingContributor.socialLinks, twitter: e.target.value },
-                      })
-                    }
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded text-xs focus:outline-none focus:border-black"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Website URL</label>
-                  <input
-                    type="url"
-                    value={editingContributor.socialLinks?.website || ''}
-                    onChange={(e) =>
-                      setEditingContributor({
-                        ...editingContributor,
-                        socialLinks: { ...editingContributor.socialLinks, website: e.target.value },
-                      })
-                    }
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded text-xs focus:outline-none focus:border-black"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Email</label>
-                  <input
-                    type="email"
-                    value={editingContributor.email || ''}
-                    onChange={(e) => setEditingContributor({ ...editingContributor, email: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded text-xs focus:outline-none focus:border-black"
-                  />
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={handleCloseEdit}
-                  className="px-4 py-2 text-xs font-bold uppercase tracking-wider text-slate-600 hover:text-black rounded"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={editLoading}
-                  className="bg-black hover:bg-brand-accent text-white px-6 py-2 rounded text-xs font-bold uppercase tracking-wider transition-colors disabled:opacity-50 flex items-center gap-1.5"
-                >
-                  {editLoading ? <Loader2 size={14} className="animate-spin" /> : null}
-                  Save Changes
-                </button>
               </div>
             </form>
           </div>
