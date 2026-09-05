@@ -20,9 +20,11 @@ import {
   ArrowRight,
   Sparkles,
   Edit3,
-  ShieldCheck
+  ShieldCheck,
+  Users
 } from "lucide-react";
 import { getArticleById } from "../services/articleService";
+import { trackArticleRead } from "../services/analyticsService";
 import { Article } from "../types";
 import { useAuth } from "../lib/AuthContext";
 import Navbar from "../components/Navbar";
@@ -45,6 +47,13 @@ export default function ArticlePage() {
       if (lookupKey) {
         const data = await getArticleById(lookupKey);
         setArticle(data);
+        if (data) {
+          trackArticleRead(data.id || data.slug || lookupKey).then((newViews) => {
+            if (typeof newViews === "number") {
+              setArticle((prev) => (prev ? { ...prev, views: newViews } : null));
+            }
+          });
+        }
       }
       setLoading(false);
     };
@@ -273,11 +282,20 @@ export default function ArticlePage() {
                   </div>
 
                   {/* Date & Read Time */}
-                  <div className="flex items-center gap-2 text-xs text-slate-400 pt-0.5">
+                  <div className="flex items-center gap-2 text-xs text-slate-400 pt-0.5 flex-wrap">
                     <Calendar size={12} className="text-slate-400" />
                     <span>{article.date}</span>
                     <span>•</span>
                     <span>{article.readTime}</span>
+                    {typeof article.views === "number" && article.views > 0 && (
+                      <>
+                        <span>•</span>
+                        <span className="inline-flex items-center gap-1 font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full text-[11px]">
+                          <Users size={11} className="text-emerald-600" />
+                          <span>{article.views.toLocaleString()} readers</span>
+                        </span>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>

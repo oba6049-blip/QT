@@ -42,6 +42,11 @@ import {
   updateUserInDb,
   deleteUserInDb,
   changeUserPasswordInDb,
+  getPlatformAnalytics,
+  getDailyAnalyticsFromDb,
+  recordDailyPlatformView,
+  incrementArticleViews,
+  incrementSpotlightViews,
 } from "./db";
 import {
   uploadToS3,
@@ -441,6 +446,16 @@ export function createApp(): express.Application {
     }
   });
 
+  app.post("/api/articles/:id/view", async (req, res) => {
+    try {
+      const visitorId = (req.body?.visitorId || req.ip || req.headers["x-forwarded-for"] || "guest").toString();
+      const views = await incrementArticleViews(req.params.id, 1, visitorId);
+      res.json({ success: true, id: req.params.id, views });
+    } catch (e: any) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+
   // ---------------- CONTRIBUTORS ----------------
   app.get("/api/contributors", async (req, res) => {
     try {
@@ -782,6 +797,47 @@ export function createApp(): express.Application {
       }
 
       res.json({ success });
+    } catch (e: any) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  app.post("/api/spotlight/:id/view", async (req, res) => {
+    try {
+      const visitorId = (req.body?.visitorId || req.ip || req.headers["x-forwarded-for"] || "guest").toString();
+      const views = await incrementSpotlightViews(req.params.id, 1, visitorId);
+      res.json({ success: true, id: req.params.id, views });
+    } catch (e: any) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  // ---------------- ANALYTICS & READERSHIP ----------------
+  app.get("/api/analytics/overview", async (req, res) => {
+    try {
+      const overview = await getPlatformAnalytics();
+      res.json(overview);
+    } catch (e: any) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  app.get("/api/analytics/daily", async (req, res) => {
+    try {
+      const days = req.query.days ? parseInt(req.query.days as string, 10) : 30;
+      const history = await getDailyAnalyticsFromDb(days);
+      res.json(history);
+    } catch (e: any) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  app.post("/api/analytics/track", async (req, res) => {
+    try {
+      const { type, id, category, path } = req.body || {};
+      const visitorId = (req.body?.visitorId || req.ip || req.headers["x-forwarded-for"] || "guest").toString();
+      await recordDailyPlatformView({ type: type || "page", id, category, path, visitorId });
+      res.json({ success: true });
     } catch (e: any) {
       res.status(500).json({ error: e.message });
     }

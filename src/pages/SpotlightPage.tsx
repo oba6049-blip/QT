@@ -13,12 +13,14 @@ import {
   ShieldCheck, 
   Share2, 
   Check, 
-  User 
+  User,
+  Users
 } from "lucide-react";
 import DOMPurify from "dompurify";
 import ReactMarkdown from "react-markdown";
 import { getSpotlightStoryById } from "../services/spotlightService";
 import { getContributorById } from "../services/contributorService";
+import { trackSpotlightRead } from "../services/analyticsService";
 import { SpotlightStory, Contributor } from "../types";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
@@ -37,6 +39,13 @@ export default function SpotlightPage() {
       if (id) {
         const data = await getSpotlightStoryById(id);
         setStory(data);
+        if (data) {
+          trackSpotlightRead(data.id || data.slug || id).then((newViews) => {
+            if (typeof newViews === "number") {
+              setStory((prev) => (prev ? { ...prev, views: newViews } : null));
+            }
+          });
+        }
         if (data?.contributorId) {
           try {
             const c = await getContributorById(data.contributorId);
@@ -289,6 +298,15 @@ export default function SpotlightPage() {
                     <Calendar size={12} />
                     {formattedDate}
                   </span>
+                  {typeof story.views === "number" && story.views > 0 && (
+                    <>
+                      <span className="text-slate-300">•</span>
+                      <span className="inline-flex items-center gap-1 font-medium text-slate-600 bg-slate-100 px-2.5 py-0.5 rounded-full text-xs">
+                        <Users size={12} className="text-emerald-600" />
+                        <span>{story.views.toLocaleString()} readers</span>
+                      </span>
+                    </>
+                  )}
                 </div>
 
                 <h1 className="text-5xl md:text-7xl font-editorial font-bold text-slate-900 mb-6 leading-tight">

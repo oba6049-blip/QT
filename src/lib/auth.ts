@@ -33,6 +33,7 @@ export function getStoredAdminUser(): AdminUserSession | null {
         if (!parsed.allowedTabs) {
           if (parsed.email.toLowerCase() === ADMIN_EMAIL.toLowerCase() || parsed.role === "superadmin") {
             parsed.allowedTabs = [
+              "analytics",
               "create",
               "manage",
               "create-contributor",
@@ -47,7 +48,7 @@ export function getStoredAdminUser(): AdminUserSession | null {
               "team",
             ];
           } else {
-            parsed.allowedTabs = ["create", "manage", "create-contributor", "manage-contributors"];
+            parsed.allowedTabs = ["analytics", "create", "manage", "create-contributor", "manage-contributors"];
           }
         }
         return parsed;

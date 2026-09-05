@@ -7,12 +7,13 @@ import { getEvents, createEvent, deleteEvent } from "../services/eventService";
 import { getExperts, createExpert, deleteExpert } from "../services/expertService";
 import { getSpotlightStories, createSpotlightStory, deleteSpotlightStory } from "../services/spotlightService";
 import { Article, NewsEvent, Expert, SpotlightStory, DashboardTab } from "../types";
-import { LayoutDashboard, FilePlus, LogOut, CheckCircle, AlertCircle, ArrowLeft, Upload, Image as ImageIcon, Loader2, Trash2, Calendar, Users, Twitter, Linkedin, ExternalLink, Sparkles, Database, RefreshCw, Server, Cloud, HardDrive, Key, Lock, Settings, Check, HelpCircle, ShieldAlert, FolderSync, ShieldCheck, UserCheck, Edit3, Edit, History, Tag, Eye } from "lucide-react";
+import { LayoutDashboard, FilePlus, LogOut, CheckCircle, AlertCircle, ArrowLeft, Upload, Image as ImageIcon, Loader2, Trash2, Calendar, Users, Twitter, Linkedin, ExternalLink, Sparkles, Database, RefreshCw, Server, Cloud, HardDrive, Key, Lock, Settings, Check, HelpCircle, ShieldAlert, FolderSync, ShieldCheck, UserCheck, Edit3, Edit, History, Tag, Eye, BarChart3 } from "lucide-react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { logout, hasAccessToTab, isSuperAdmin } from "../lib/auth";
 
 import RichTextEditor from "../components/RichTextEditor";
 import TeamManagement from "../components/TeamManagement";
+import ReadershipAnalytics from "../components/ReadershipAnalytics";
 import ChangePasswordModal from "../components/ChangePasswordModal";
 import CreateContributorTab from "../components/CreateContributorTab";
 import ManageContributorsTab from "../components/ManageContributorsTab";
@@ -54,7 +55,7 @@ export default function AdminDashboard() {
     if (user) {
       if (!hasAccessToTab(user, view)) {
         const ALL_TABS: DashboardTab[] = [
-          'create', 'manage', 'create-contributor', 'manage-contributors', 'create-event', 'manage-events',
+          'create', 'manage', 'analytics', 'create-contributor', 'manage-contributors', 'create-event', 'manage-events',
           'create-expert', 'manage-experts', 'create-spotlight', 'manage-spotlight',
           'storage', 'team'
         ];
@@ -65,6 +66,14 @@ export default function AdminDashboard() {
       }
     }
   }, [user, view]);
+
+  // Support ?tab=analytics or other tabs via query parameter
+  useEffect(() => {
+    const tabParam = searchParams.get('tab') as DashboardTab | null;
+    if (tabParam && user && hasAccessToTab(user, tabParam)) {
+      setView(tabParam);
+    }
+  }, [searchParams, user]);
 
   // Deep linking for editing article via query params: ?edit=article_id
   useEffect(() => {
@@ -746,6 +755,16 @@ export default function AdminDashboard() {
             </button>
           )}
 
+          {hasAccessToTab(user, 'analytics') && (
+            <button 
+              onClick={() => setView('analytics')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded text-sm font-bold uppercase tracking-wider transition-colors ${view === 'analytics' ? 'bg-white/10 text-brand-accent' : 'hover:bg-white/5 text-slate-400'}`}
+            >
+              <BarChart3 size={18} />
+              Readership Analytics
+            </button>
+          )}
+
           {(hasAccessToTab(user, 'create-contributor') || hasAccessToTab(user, 'manage-contributors')) && (
             <div className="pt-4 pb-2 px-4">
                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Contributors & Authors</p>
@@ -1005,6 +1024,7 @@ export default function AdminDashboard() {
               Welcome back, <strong className="text-slate-800">{user?.displayName || user?.email}</strong>. 
               {view === 'create' ? ' Create a new story.' : 
                view === 'manage' ? ' Manage your feed.' : 
+               view === 'analytics' ? ' Track live readers per article across each section, spotlight stories, and everyday platform views.' :
                view === 'create-contributor' ? ' Register a new contributing writer or analyst.' :
                view === 'manage-contributors' ? ' Manage contributor directory, slugs, and profiles.' :
                view === 'create-event' ? ' Post an upcoming event.' : 
@@ -1049,6 +1069,11 @@ export default function AdminDashboard() {
           {hasAccessToTab(user, 'manage') && (
             <button onClick={() => setView('manage')} className={`px-4 py-2 rounded text-xs font-bold uppercase whitespace-nowrap transition-colors ${view === 'manage' ? 'bg-black text-white' : 'bg-white border border-slate-200 text-slate-700'}`}>
               Feed
+            </button>
+          )}
+          {hasAccessToTab(user, 'analytics') && (
+            <button onClick={() => setView('analytics')} className={`px-4 py-2 rounded text-xs font-bold uppercase whitespace-nowrap transition-colors ${view === 'analytics' ? 'bg-black text-white' : 'bg-white border border-slate-200 text-slate-700'}`}>
+              Analytics
             </button>
           )}
           {hasAccessToTab(user, 'create-contributor') && (
@@ -1877,7 +1902,15 @@ export default function AdminDashboard() {
                     </div>
                     
                     <div className="p-6">
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-brand-accent mb-2">{story.companyName}</p>
+                      <div className="flex items-center justify-between gap-2 mb-2">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-brand-accent truncate">{story.companyName}</p>
+                        {typeof story.views === 'number' && (
+                          <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 inline-flex items-center gap-1 shrink-0">
+                            <Users size={10} className="text-emerald-600" />
+                            {story.views.toLocaleString()} readers
+                          </span>
+                        )}
+                      </div>
                       <h3 className="font-editorial font-bold text-xl mb-3 text-slate-900">{story.founderName}</h3>
                       <p className="text-sm text-slate-500 line-clamp-2 mb-4">
                         {story.story ? story.story.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() : ''}
@@ -2246,6 +2279,35 @@ export default function AdminDashboard() {
           </section>
         ) : view === 'team' ? (
           <TeamManagement />
+        ) : view === 'analytics' ? (
+          <ReadershipAnalytics 
+            onEditArticle={(id) => {
+              const match = articles.find(a => a.id === id || (a as any)._id === id);
+              if (match) {
+                setEditingArticle(match);
+              } else {
+                fetch(`/api/articles/${id}`)
+                  .then(r => (r.ok ? r.json() : null))
+                  .then(data => {
+                    if (data && data.title) setEditingArticle(data);
+                  })
+                  .catch(() => {});
+              }
+            }}
+            onEditSpotlight={(id) => {
+              const match = spotlights.find(s => s.id === id);
+              if (match) {
+                setEditingSpotlight(match);
+              } else {
+                fetch(`/api/spotlight/${id}`)
+                  .then(r => (r.ok ? r.json() : null))
+                  .then(data => {
+                    if (data && data.title) setEditingSpotlight(data);
+                  })
+                  .catch(() => {});
+              }
+            }}
+          />
         ) : view === 'manage' ? (
           <section className="max-w-5xl">
              <div className="bg-white border border-slate-200 p-8 md:p-12">
@@ -2307,6 +2369,12 @@ export default function AdminDashboard() {
                                 <span className="text-[11px] text-slate-400 block truncate">
                                   by <strong className="text-slate-600">{article.author || 'Staff'}</strong>
                                   {article.featured && <span className="ml-2 text-brand-accent font-bold">★ Hero Featured</span>}
+                                  {typeof article.views === 'number' && (
+                                    <span className="ml-2.5 text-emerald-700 font-bold inline-flex items-center gap-1 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                                      <Users size={10} className="text-emerald-600" />
+                                      {article.views.toLocaleString()} readers
+                                    </span>
+                                  )}
                                 </span>
                               </div>
                             </div>

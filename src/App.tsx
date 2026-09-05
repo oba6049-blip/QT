@@ -16,8 +16,9 @@ import Footer from "./components/Footer";
 import { AuthProvider, useAuth } from "./lib/AuthContext";
 import { useEffect } from "react";
 import { seedDatabase } from "./services/articleService";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
+import { trackPlatformPageView } from "./services/analyticsService";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminLoginPage from "./pages/AdminLoginPage";
 import CategoryPage from "./pages/CategoryPage";
@@ -34,6 +35,11 @@ import PartnershipsPage from "./pages/PartnershipsPage";
 
 function AppContent() {
   const { user } = useAuth();
+  const location = useLocation();
+
+  useEffect(() => {
+    trackPlatformPageView(location.pathname);
+  }, [location.pathname]);
 
   useEffect(() => {
     if (user) {

@@ -48,6 +48,7 @@ export interface Article {
   image: string;
   featured: boolean;
   trending?: boolean;
+  views?: number;
   tags?: string[];
   status?: 'published' | 'draft' | 'archived';
   createdAt?: any;
@@ -97,6 +98,7 @@ export interface SpotlightStory {
   contributor?: Contributor;
   postedBy?: string; // User ID who submitted/created
   postedByName?: string; // Display name or email of publisher
+  views?: number;
   publishedAt?: string;
   createdAt?: any;
   updatedAt?: any;
@@ -112,6 +114,7 @@ export interface UserProfile {
 export type UserRole = 'superadmin' | 'editor' | 'author' | 'event_manager' | 'custom';
 
 export type DashboardTab = 
+  | 'analytics'
   | 'create' 
   | 'manage' 
   | 'create-contributor'
@@ -128,7 +131,7 @@ export type DashboardTab =
 export interface DashboardTabOption {
   id: DashboardTab;
   label: string;
-  category: 'Editorial' | 'Contributors' | 'Events' | 'Experts' | 'Spotlights' | 'System';
+  category: 'Analytics' | 'Editorial' | 'Contributors' | 'Events' | 'Experts' | 'Spotlights' | 'System';
   description: string;
 }
 
@@ -144,5 +147,94 @@ export interface DashboardUser {
   createdAt: string;
   lastLoginAt?: string;
   createdBy?: string;
+}
+
+// ---------------- ANALYTICS INTERFACES ----------------
+export interface DailyAnalyticsData {
+  id?: string;
+  date: string;
+  dayName?: string;
+  formattedDate?: string;
+  totalViews: number;
+  uniqueVisitors: number;
+  articleViews: number;
+  spotlightViews: number;
+  otherViews: number;
+  topCategory?: string;
+  updatedAt?: string;
+}
+
+export interface ArticleReadershipItem {
+  id: string;
+  title: string;
+  slug?: string;
+  category: string;
+  author: string;
+  authorDesignation?: string;
+  authorImage?: string;
+  date?: string;
+  publishedAt?: string;
+  readTime?: string;
+  image?: string;
+  featured?: boolean;
+  trending?: boolean;
+  views: number;
+  shareOfCategory: number;
+}
+
+export interface SectionAnalytics {
+  category: string;
+  totalArticles: number;
+  totalViews: number;
+  averageViewsPerArticle: number;
+  sharePercentage: number;
+  topArticle?: ArticleReadershipItem;
+  articles: ArticleReadershipItem[];
+}
+
+export interface SpotlightAnalyticsItem {
+  id: string;
+  founderName: string;
+  companyName: string;
+  title: string;
+  slug?: string;
+  image: string;
+  author?: string;
+  views: number;
+  shareOfSpotlights: number;
+  createdAt?: string;
+}
+
+export interface PlatformAnalyticsOverview {
+  platform: {
+    totalViews: number;
+    todayViews: number;
+    yesterdayViews: number;
+    last7DaysViews: number;
+    last30DaysViews: number;
+    avgDailyViews: number;
+    todayUniqueVisitors: number;
+    growthRate: number;
+    totalArticleReads: number;
+    totalSpotlightReads: number;
+  };
+  dailyHistory: DailyAnalyticsData[];
+  sections: SectionAnalytics[];
+  spotlights: {
+    totalSpotlights: number;
+    totalViews: number;
+    averageViews: number;
+    items: SpotlightAnalyticsItem[];
+  };
+  topArticles: Array<{
+    id: string;
+    title: string;
+    slug?: string;
+    category: string;
+    author: string;
+    views: number;
+    image?: string;
+    date?: string;
+  }>;
 }
 

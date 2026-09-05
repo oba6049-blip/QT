@@ -36,6 +36,12 @@ import { isSuperAdmin } from "../lib/auth";
 
 export const AVAILABLE_TABS: DashboardTabOption[] = [
   {
+    id: "analytics",
+    label: "Readership Analytics",
+    category: "Analytics",
+    description: "Real-time reader tracking across publication sections, spotlight stories, and daily platform traffic",
+  },
+  {
     id: "create",
     label: "Publish Story",
     category: "Editorial",
@@ -110,6 +116,7 @@ const ROLE_PRESETS: {
     badgeClass: "bg-purple-100 text-purple-900 border-purple-200",
     description: "Unrestricted access to all editorial tools, team administration, and system storage.",
     defaultTabs: [
+      "analytics",
       "create",
       "manage",
       "create-event",
@@ -128,6 +135,7 @@ const ROLE_PRESETS: {
     badgeClass: "bg-blue-100 text-blue-900 border-blue-200",
     description: "Comprehensive content curation across stories, events, spotlights, and expert network.",
     defaultTabs: [
+      "analytics",
       "create",
       "manage",
       "create-event",
@@ -143,7 +151,7 @@ const ROLE_PRESETS: {
     title: "Author / Staff Writer",
     badgeClass: "bg-emerald-100 text-emerald-900 border-emerald-200",
     description: "Publish stories and review feed articles.",
-    defaultTabs: ["create", "manage"],
+    defaultTabs: ["analytics", "create", "manage"],
   },
   {
     role: "event_manager",
